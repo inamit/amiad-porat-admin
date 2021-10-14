@@ -12,7 +12,8 @@ initializeApp();
 // });
 
 export const createUser = functions.https.onCall(async (data, context) => {
-  if (!context.auth || context.auth.token.role !== "admin") {
+  if (!context.auth) {
+    console.log(context.auth);
     throw new functions.https.HttpsError(
       "unauthenticated",
       "User cannot access this information"
@@ -29,9 +30,22 @@ export const createUser = functions.https.onCall(async (data, context) => {
   await firestore().collection("users").doc(uid).set({
     firstName: data.firstName,
     lastName: data.lastName,
-    birthDate: data.birthDate,
+    // birthDate: data.birthDate,
     phoneNo: data.phoneNo,
-    grade: data.grade,
-    group: data.group,
+    // grade: data.grade,
+    // group: data.group,
   });
+});
+
+export const getAllUsers = functions.https.onCall(async (data, context) => {
+  if (!context.auth || context.auth.token.role !== "admin") {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "User cannot access this information"
+    );
+  }
+
+  const list = await auth().listUsers();
+
+  return list.users;
 });
