@@ -29,14 +29,21 @@
     <!-- Navigation Items -->
     <v-list expand shaped class="vertical-nav-menu-items pr-5">
       <nav-menu-link
-        title="Dashboard"
+        title="דף הבית"
         :to="{ name: 'dashboard' }"
         :icon="icons.mdiHomeOutline"
       />
+      <nav-menu-section-title title="פעולות חשבון" />
       <nav-menu-link
         title="Account Settings"
         :to="{ name: 'pages-account-settings' }"
         :icon="icons.mdiAccountCogOutline"
+      />
+      <nav-menu-section-title title="פעולות על משתמשים" />
+      <nav-menu-link
+        title="הוספת חשבון"
+        :to="{ name: 'addAccount' }"
+        :icon="icons.mdiAccountPlusOutline"
       />
       <nav-menu-group title="Pages" :icon="icons.mdiFileOutline">
         <nav-menu-link
@@ -96,6 +103,7 @@ import {
   mdiFileOutline,
   mdiFormSelect,
   mdiAccountCogOutline,
+  mdiAccountPlusOutline,
 } from "@mdi/js";
 import NavMenuSectionTitle from "./components/NavMenuSectionTitle.vue";
 import NavMenuGroup from "./components/NavMenuGroup.vue";
@@ -124,6 +132,7 @@ export default class VerticalNavMenu extends Vue {
     mdiFileOutline,
     mdiFormSelect,
     mdiAccountCogOutline,
+    mdiAccountPlusOutline,
   };
 }
 </script>
@@ -152,6 +161,7 @@ export default class VerticalNavMenu extends Vue {
 
 .app-navigation-menu {
   .v-list-item {
+    text-align: start;
     &.vertical-nav-menu-link {
       ::v-deep .v-list-item__icon {
         .v-icon {
@@ -159,17 +169,6 @@ export default class VerticalNavMenu extends Vue {
         }
       }
     }
-  }
-}
-
-// You can remove below style
-// Upgrade Banner
-.app-navigation-menu {
-  .upgrade-banner {
-    position: absolute;
-    bottom: 13px;
-    left: 50%;
-    transform: translateX(-50%);
   }
 }
 </style>

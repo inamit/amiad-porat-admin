@@ -1,13 +1,13 @@
-import Vue from 'vue'
-import Vuetify from 'vuetify/lib'
-import preset from './default-preset/preset'
+import Vue from "vue";
+import Vuetify from "vuetify/lib";
+import preset from "./default-preset/preset";
 
-Vue.use(Vuetify)
+Vue.use(Vuetify);
 
 export default new Vuetify({
   preset,
   icons: {
-    iconfont: 'mdiSvg',
+    iconfont: "mdiSvg",
   },
   theme: {
     options: {
@@ -15,5 +15,5 @@ export default new Vuetify({
       variations: false,
     },
   },
-  rtl: true
-})
+  rtl: true,
+});
