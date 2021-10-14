@@ -8,6 +8,14 @@
       dense
       placeholder="First Name"
     />
+    <v-text-field
+      v-model="lastName"
+      :prepend-inner-icon="icons.mdiAccountOutline"
+      label="Last Name"
+      outlined
+      dense
+      placeholder="Last Name"
+    />
 
     <v-text-field
       v-model="email"
@@ -41,7 +49,7 @@
 
     <v-checkbox v-model="checkbox" label="Remember me" class="mt-0" />
 
-    <v-btn color="primary"> Submit </v-btn>
+    <v-btn color="primary" @click="addUser"> Submit </v-btn>
     <v-btn type="reset" outlined class="mx-2"> Reset </v-btn>
   </v-form>
 </template>
@@ -56,10 +64,12 @@ import {
   mdiLockOutline,
 } from "@mdi/js";
 import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { httpsCallable, getFunctions } from "firebase/functions";
 
 @Component({ name: "AddUser" })
 export default class AddUser extends Vue {
   firstname = "";
+  lastName = "";
   email = "";
   mobile = "";
   password = "";
@@ -73,11 +83,15 @@ export default class AddUser extends Vue {
   };
 
   async addUser() {
-    const { user } = await createUserWithEmailAndPassword(
-      getAuth(),
-      this.email,
-      this.password
-    );
+    const createUser = httpsCallable(getFunctions(), "createUser");
+    createUser({
+      email: this.email,
+      password: this.password,
+      firstName: this.firstname,
+      lastName: this.lastName,
+      phoneNo: this.mobile,
+      role: "admin",
+    });
   }
 }
 </script>
