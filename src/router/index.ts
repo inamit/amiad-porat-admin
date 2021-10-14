@@ -1,7 +1,9 @@
+import api from "@/api/api";
 import Vue from "vue";
-import VueRouter, { RouteConfig } from "vue-router";
+import VueRouter, { NavigationGuardNext, Route, RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
 import Login from "../views/pages/Login.vue";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 Vue.use(VueRouter);
 
@@ -17,7 +19,6 @@ const routes: Array<RouteConfig> = [
     path: "/",
     name: "Home",
     component: Home,
-    meta: { requiresAuth: true },
   },
   {
     path: "/about",
@@ -27,20 +28,40 @@ const routes: Array<RouteConfig> = [
     // which is lazy-loaded when the route is visited.
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/About.vue"),
-    meta: { requiresAuth: true },
   },
   {
     path: "/login",
     name: "Login",
     component: Login,
     meta: { requiresAuth: false, layout: "blank" },
-  },
+    beforeEnter: (to, from, next) => {
+      const user = getAuth().currentUser;
 
+      console.log(user);
+      if (user) {
+        next("dashboard");
+      }
+
+      next();
+    },
+  },
   {
     path: "/dashboard",
     name: "dashboard",
-    // component: () => import("@/views/dashboard/Dashboard.vue"),
+    component: () => import("../views/dashboard/Dashboard.vue"),
+    meta: { requiresAuth: true },
   },
+  {
+    path: "/users",
+    children: [
+      {
+        path: "/add",
+        name: "addAccount",
+        component: () => import("../views/users/add-user/AddUser.vue"),
+      },
+    ],
+  },
+
   {
     path: "/typography",
     name: "typography",
@@ -106,6 +127,20 @@ const router = new VueRouter({
   mode: "history",
   base: process.env.BASE_URL,
   routes,
+});
+
+router.beforeEach((to: Route, from: Route, next: NavigationGuardNext) => {
+  console.log(to.meta?.requiresAuth);
+
+  if (to.meta?.requiresAuth) {
+    onAuthStateChanged(getAuth(), (user) => {
+      if (!user) {
+        next("/login");
+      }
+    });
+  }
+
+  next();
 });
 
 export default router;

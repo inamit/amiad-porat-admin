@@ -49,7 +49,7 @@
 
             <div class="d-flex align-center justify-space-between flex-wrap">
               <!-- forgot link -->
-              <a href="javascript:void(0)" class="mt-1 ms-1"> שכחתי סיסמה </a>
+              <a @click="resetPassword" class="mt-1 ms-1"> שכחתי סיסמה </a>
             </div>
 
             <v-btn
@@ -101,6 +101,15 @@ import Vue from "vue";
 import Component from "vue-class-component";
 import { mdiEyeOffOutline, mdiEyeOutline } from "@mdi/js";
 import api from "@/api/api";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  AuthErrorCodes,
+  sendPasswordResetEmail,
+} from "firebase/auth";
+import Swal from "sweetalert2";
+import { use } from "vue/types/umd";
+import router from "@/router";
 
 @Component({ name: "Login" })
 export default class Login extends Vue {
@@ -117,19 +126,62 @@ export default class Login extends Vue {
     passwordRules: [(v: any) => Boolean(v) || "יש למלא סיסמה"],
   };
   loading = false;
-  error = null;
+  error = "";
 
   async login() {
     try {
       this.loading = true;
-      const user = await api.User().login(this.username, this.password);
+      const auth = getAuth();
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        this.username,
+        this.password
+      );
+      // const user = await api.User().login(this.username, this.password);
+      console.log(userCredential.user);
 
-      console.log(user);
+      if (userCredential.user) {
+        router.push("dashboard");
+      }
     } catch (error) {
-      this.error = error.message;
+      switch (error.code) {
+        case AuthErrorCodes.INVALID_EMAIL:
+          this.error = "יש לכתוב כתובת מייל תקינה";
+          break;
+        case AuthErrorCodes.INVALID_PASSWORD:
+        case AuthErrorCodes.USER_DELETED:
+          this.error = "המייל/סיסמה לא נכונים. נסה שנית";
+          break;
+
+        default:
+          this.error = error.message;
+          break;
+      }
       console.log(error);
     } finally {
       this.loading = false;
+    }
+  }
+
+  async resetPassword() {
+    const email = await Swal.fire({
+      title: "הכנס כתובת מייל",
+      icon: "question",
+      input: "email",
+    });
+    try {
+      await sendPasswordResetEmail(getAuth(), email.value);
+      Swal.fire({
+        title: "הצלחנו!",
+        text: "שלחנו לך קישור במייל. עקוב אחריו ואפס את סיסמתך",
+        icon: "success",
+      });
+    } catch (error) {
+      Swal.fire({
+        title: "שגיאה",
+        text: "הייתה שגיאה בשליחת המייל. נסה שנית",
+        icon: "error",
+      });
     }
   }
 }
