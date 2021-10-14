@@ -3,46 +3,54 @@
     <v-text-field
       v-model="firstname"
       :prepend-inner-icon="icons.mdiAccountOutline"
-      label="First Name"
+      label="שם פרטי"
       outlined
       dense
-      placeholder="First Name"
+      placeholder="שם פרטי"
+    />
+    <v-text-field
+      v-model="lastName"
+      :prepend-inner-icon="icons.mdiAccountOutline"
+      label="שם משפחה"
+      outlined
+      dense
+      placeholder="שם משפחה"
     />
 
     <v-text-field
       v-model="email"
       :prepend-inner-icon="icons.mdiEmailOutline"
-      label="Email"
+      label="מייל"
       type="email"
       outlined
       dense
-      placeholder="Email"
+      placeholder="מייל"
     />
 
     <v-text-field
       v-model="mobile"
       :prepend-inner-icon="icons.mdiCellphone"
-      label="Mobile"
+      label="מספר טלפון"
       outlined
       dense
       type="number"
-      placeholder="Number"
+      placeholder="מספר טלפון"
     />
 
     <v-text-field
       v-model="password"
       :prepend-inner-icon="icons.mdiLockOutline"
-      label="Password"
+      label="סיסמה"
       outlined
       dense
       type="password"
-      placeholder="password"
+      placeholder="סיסמה"
     />
 
     <v-checkbox v-model="checkbox" label="Remember me" class="mt-0" />
 
-    <v-btn color="primary"> Submit </v-btn>
-    <v-btn type="reset" outlined class="mx-2"> Reset </v-btn>
+    <v-btn color="primary" @click="addUser"> צור משתמש </v-btn>
+    <v-btn type="reset" outlined class="mx-2"> אפס </v-btn>
   </v-form>
 </template>
 
@@ -55,11 +63,12 @@ import {
   mdiCellphone,
   mdiLockOutline,
 } from "@mdi/js";
-import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 @Component({ name: "AddUser" })
 export default class AddUser extends Vue {
   firstname = "";
+  lastName = "";
   email = "";
   mobile = "";
   password = "";
@@ -73,11 +82,15 @@ export default class AddUser extends Vue {
   };
 
   async addUser() {
-    const { user } = await createUserWithEmailAndPassword(
-      getAuth(),
-      this.email,
-      this.password
-    );
+    const createUser = httpsCallable(getFunctions(), "createUser");
+    createUser({
+      email: this.email,
+      password: this.password,
+      firstName: this.firstname,
+      lastName: this.lastName,
+      phoneNo: this.mobile,
+      role: "student",
+    });
   }
 }
 </script>
