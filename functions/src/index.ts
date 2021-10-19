@@ -21,10 +21,10 @@ export const createUser = functions.https.onCall(async (data, context) => {
   await firestore().collection("users").doc(uid).set({
     firstName: data.firstName,
     lastName: data.lastName,
-    // birthDate: data.birthDate,
+    birthDate: data.birthDate,
     phoneNo: data.phoneNo,
-    // grade: data.grade,
-    // group: data.group,
+    grade: data.grade,
+    group: data.group,
   });
 });
 
