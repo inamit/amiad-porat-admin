@@ -3,16 +3,8 @@ import { auth, firestore, initializeApp } from "firebase-admin";
 
 initializeApp();
 
-// // Start writing Firebase Functions
-// // https://firebase.google.com/docs/functions/typescript
-//
-// export const helloWorld = functions.https.onRequest((request, response) => {
-//   functions.logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
-
 export const createUser = functions.https.onCall(async (data, context) => {
-  if (!context.auth || context.auth.token.role !== "admin") {
+  if (!context.auth) {
     throw new functions.https.HttpsError(
       "unauthenticated",
       "User cannot access this information"
@@ -34,4 +26,30 @@ export const createUser = functions.https.onCall(async (data, context) => {
     grade: data.grade,
     group: data.group,
   });
+});
+
+export const getAllUsers = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "User cannot access this information"
+    );
+  }
+
+  const { users } = await auth().listUsers();
+
+  return await Promise.all(
+    users.map(async ({ uid, email, metadata, customClaims, phoneNumber }) => {
+      const userInfo = await firestore().collection("users").doc(uid).get();
+
+      return {
+        ...userInfo.data(),
+        uid,
+        email,
+        metadata,
+        customClaims,
+        phoneNumber,
+      };
+    })
+  );
 });

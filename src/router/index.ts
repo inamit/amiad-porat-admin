@@ -17,8 +17,9 @@ declare module "vue-router" {
 const routes: Array<RouteConfig> = [
   {
     path: "/",
-    name: "Home",
-    component: Home,
+    redirect: "/dashboard",
+    // name: "Home",
+    // component: Home,
   },
   {
     path: "/about",
@@ -52,15 +53,25 @@ const routes: Array<RouteConfig> = [
     meta: { requiresAuth: true },
   },
   {
-    path: "/users",
-    children: [
-      {
-        path: "/add",
-        name: "addAccount",
-        component: () => import("../views/users/add-user/AddUser.vue"),
-      },
-    ],
+    path: "/users/add",
+    name: "addAccount",
+    component: () => import("../views/users/add-user/AddUser.vue"),
   },
+  {
+    path: "/users",
+    name: "listUsers",
+    component: () => import("../views/users/all-users/ListUsers.vue"),
+  },
+  // {
+  //   path: "/users",
+  //   children: [
+  //     {
+  //       path: "/add",
+  //       name: "addAccount",
+  //       component: () => import("../views/users/add-user/AddUser.vue"),
+  //     },
+  //   ],
+  // },
 
   {
     path: "/typography",
