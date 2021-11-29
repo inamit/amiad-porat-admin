@@ -6,12 +6,15 @@ import store from "./store";
 import vuetify from "./plugins/vuetify";
 import VueCookies from "vue-cookies";
 import axios from "axios";
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApp } from "firebase/app";
 import {
   setPersistence,
   getAuth,
   browserLocalPersistence,
+  connectAuthEmulator,
 } from "firebase/auth";
+import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
+import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 
 // Vue.config.productionTip = false;
 Vue.prototype.$axios = axios;
@@ -27,6 +30,15 @@ const firebaseConfig = {
 };
 console.log(firebaseConfig);
 initializeApp(firebaseConfig);
+
+const functions = getFunctions(getApp());
+connectFunctionsEmulator(functions, "localhost", 5001);
+
+const auth = getAuth(getApp());
+connectAuthEmulator(auth, "http://localhost:9099");
+
+const firestore = getFirestore(getApp());
+connectFirestoreEmulator(firestore, "localhost", 8082);
 
 setPersistence(getAuth(), browserLocalPersistence);
 Vue.use(VueCookies);

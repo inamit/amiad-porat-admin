@@ -22,7 +22,17 @@
           <v-spacer />
 
           <!-- Right Content -->
-          <theme-switcher />
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn icon small v-on="on" v-bind="attrs">
+                <v-icon>
+                  {{ icons.mdiBugOutline }}
+                </v-icon>
+              </v-btn>
+            </template>
+            <span>דווח על תקלה</span>
+          </v-tooltip>
+          <theme-switcher class="ms-3" />
           <v-btn icon small class="ms-3">
             <v-icon>
               {{ icons.mdiBellOutline }}
@@ -47,7 +57,7 @@ import Component from "vue-class-component";
 import VerticalNavMenu from "./components/vertical-nav-menu/VerticalNavMenu.vue";
 import ThemeSwitcher from "./components/ThemeSwitcher.vue";
 import AppBarUserMenu from "./components/AppBarUserMenu.vue";
-import { mdiMagnify, mdiBellOutline } from "@mdi/js";
+import { mdiMagnify, mdiBellOutline, mdiBugOutline } from "@mdi/js";
 import { ref } from "@vue/composition-api";
 
 @Component({
@@ -55,22 +65,12 @@ import { ref } from "@vue/composition-api";
   name: "ContentTemplate",
 })
 export default class Template extends Vue {
-  isDrawerOpen = false;
+  isDrawerOpen = true;
   icons = {
     mdiMagnify,
     mdiBellOutline,
+    mdiBugOutline,
   };
-  // setup() {
-  //   const isDrawerOpen = ref(null);
-
-  //   return {
-  //     isDrawerOpen,
-  //     icons: {
-  //       mdiMagnify,
-  //       mdiBellOutline,
-  //     },
-  //   };
-  // }
 }
 </script>
 
