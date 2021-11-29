@@ -143,7 +143,7 @@ export default class Login extends Vue {
       if (userCredential.user) {
         router.push("dashboard");
       }
-    } catch (error) {
+    } catch (error: any) {
       switch (error.code) {
         case AuthErrorCodes.INVALID_EMAIL:
           this.error = "יש לכתוב כתובת מייל תקינה";
