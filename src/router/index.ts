@@ -68,6 +68,12 @@ const routes: Array<RouteConfig> = [
     component: () => import("../views/groups/all-groups/AllGroups.vue"),
     meta: { requiresAuth: true },
   },
+  {
+    path: "/lessons",
+    name: "listLessons",
+    component: () => import("../views/lessons/all-lessons/AllLessons.vue"),
+    meta: { requiresAuth: true },
+  },
   // {
   //   path: "/users",
   //   children: [
