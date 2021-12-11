@@ -3,6 +3,8 @@
     :headers="headers"
     :items="filteredUsers"
     :search="search"
+    :loading="loading"
+    loading-text="טוען מידע..."
     item-key="uid"
     class="elevation-1"
   >
@@ -100,10 +102,14 @@ export default class ListUsers extends Vue {
   roleFilter = "";
   nameFilter = "";
 
+  loading = true;
+
   async created() {
+    this.loading = true;
     const getUsers = httpsCallable(getFunctions(), "getAllUsers");
 
     this.users = (await getUsers()).data as [];
+    this.loading = false;
   }
 
   filterUserRole(user: any) {

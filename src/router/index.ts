@@ -1,4 +1,3 @@
-import api from "@/api/api";
 import Vue from "vue";
 import VueRouter, { NavigationGuardNext, Route, RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
@@ -66,6 +65,12 @@ const routes: Array<RouteConfig> = [
     path: "/groups",
     name: "listGroups",
     component: () => import("../views/groups/all-groups/AllGroups.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/lessons",
+    name: "listLessons",
+    component: () => import("../views/lessons/all-lessons/AllLessons.vue"),
     meta: { requiresAuth: true },
   },
   // {
