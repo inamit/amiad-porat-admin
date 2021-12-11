@@ -31,14 +31,18 @@ const firebaseConfig = {
 console.log(firebaseConfig);
 initializeApp(firebaseConfig);
 
-const functions = getFunctions(getApp());
-connectFunctionsEmulator(functions, "localhost", 5001);
+if (process.env.NODE_ENV === "development") {
+  console.log("testing locally -- hitting local auth and firestore emulators");
 
-const auth = getAuth(getApp());
-connectAuthEmulator(auth, "http://localhost:9099");
+  const functions = getFunctions(getApp());
+  connectFunctionsEmulator(functions, "localhost", 5001);
 
-const firestore = getFirestore(getApp());
-connectFirestoreEmulator(firestore, "localhost", 8082);
+  const auth = getAuth(getApp());
+  connectAuthEmulator(auth, "http://localhost:9099");
+
+  const firestore = getFirestore(getApp());
+  connectFirestoreEmulator(firestore, "localhost", 8082);
+}
 
 setPersistence(getAuth(), browserLocalPersistence);
 Vue.use(VueCookies);
