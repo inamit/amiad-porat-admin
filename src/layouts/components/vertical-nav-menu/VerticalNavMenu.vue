@@ -74,6 +74,11 @@
         :to="{ name: 'listGroups' }"
         :icon="icons.mdiAccountGroup"
       />
+      <nav-menu-link
+        title="תגבורים"
+        :to="{ name: 'listLessons' }"
+        :icon="icons.mdiGoogleClassroom"
+      />
       <nav-menu-section-title title="USER INTERFACE" />
       <nav-menu-link
         title="Typography"
@@ -118,6 +123,7 @@ import {
   mdiAccountPlusOutline,
   mdiAccountGroup,
   mdiFilterVariant,
+  mdiGoogleClassroom,
 } from "@mdi/js";
 import NavMenuSectionTitle from "./components/NavMenuSectionTitle.vue";
 import NavMenuGroup from "./components/NavMenuGroup.vue";
@@ -149,6 +155,7 @@ export default class VerticalNavMenu extends Vue {
     mdiAccountCogOutline,
     mdiAccountPlusOutline,
     mdiFilterVariant,
+    mdiGoogleClassroom,
   };
 }
 </script>
