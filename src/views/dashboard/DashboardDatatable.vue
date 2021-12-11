@@ -86,13 +86,12 @@
 </template>
 
 <script lang="ts">
+import Lesson from "@/models/lesson";
 import { mdiSquareEditOutline, mdiDotsVertical, mdiArrowDown } from "@mdi/js";
 import Vue from "vue";
 import Component from "vue-class-component";
 import { Prop } from "vue-property-decorator";
 import data from "./datatable-data";
-import Lesson from "@/api/models/lesson";
-import api from "@/api/api";
 
 @Component({})
 export default class DashboardDatatable extends Vue {
@@ -121,7 +120,6 @@ export default class DashboardDatatable extends Vue {
   };
 
   async created() {
-    this.lessonsList = await api.Lesson().all();
     this.isLoading = false;
   }
 
