@@ -4,7 +4,7 @@
     :items="groups"
     item-key="id"
     class="table-rounded"
-    loading="isLoding"
+    :loading="loading"
     loading-text="טוען..."
   >
     <template v-slot:top>
@@ -70,6 +70,8 @@ import Swal from "sweetalert2";
 export default class AllGroups extends Vue {
   groups: Record<string, unknown>[] = [];
 
+  loading = true;
+
   headers = [
     { text: "שם הקבוצה", value: "name" },
     { text: "מורה", value: "teacher" },
@@ -85,6 +87,8 @@ export default class AllGroups extends Vue {
   }
 
   async getGroups() {
+    this.loading = true;
+
     this.groups = [];
     const groups = await getDocs(query(collection(getFirestore(), "groups")));
 
@@ -99,6 +103,8 @@ export default class AllGroups extends Vue {
         teacher: teacher.data(),
       });
     });
+
+    this.loading = false;
   }
 
   async deleteGroup(group: any) {
