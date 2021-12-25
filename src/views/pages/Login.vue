@@ -100,7 +100,6 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import { mdiEyeOffOutline, mdiEyeOutline } from "@mdi/js";
-import api from "@/api/api";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -137,13 +136,12 @@ export default class Login extends Vue {
         this.username,
         this.password
       );
-      // const user = await api.User().login(this.username, this.password);
       console.log(userCredential.user);
 
       if (userCredential.user) {
         router.push("dashboard");
       }
-    } catch (error) {
+    } catch (error: any) {
       switch (error.code) {
         case AuthErrorCodes.INVALID_EMAIL:
           this.error = "יש לכתוב כתובת מייל תקינה";

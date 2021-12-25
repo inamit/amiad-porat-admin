@@ -1,4 +1,3 @@
-import api from "@/api/api";
 import Vue from "vue";
 import VueRouter, { NavigationGuardNext, Route, RouteConfig } from "vue-router";
 import Home from "../views/Home.vue";
@@ -37,8 +36,6 @@ const routes: Array<RouteConfig> = [
     meta: { requiresAuth: false, layout: "blank" },
     beforeEnter: (to, from, next) => {
       const user = getAuth().currentUser;
-
-      console.log(user);
       if (user) {
         next("dashboard");
       }
@@ -56,11 +53,25 @@ const routes: Array<RouteConfig> = [
     path: "/users/add",
     name: "addAccount",
     component: () => import("../views/users/add-user/AddUser.vue"),
+    meta: { requiresAuth: true },
   },
   {
     path: "/users",
     name: "listUsers",
     component: () => import("../views/users/all-users/ListUsers.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/groups",
+    name: "listGroups",
+    component: () => import("../views/groups/all-groups/AllGroups.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/lessons",
+    name: "listLessons",
+    component: () => import("../views/lessons/all-lessons/AllLessons.vue"),
+    meta: { requiresAuth: true },
   },
   // {
   //   path: "/users",
@@ -141,8 +152,6 @@ const router = new VueRouter({
 });
 
 router.beforeEach((to: Route, from: Route, next: NavigationGuardNext) => {
-  console.log(to.meta?.requiresAuth);
-
   if (to.meta?.requiresAuth) {
     onAuthStateChanged(getAuth(), (user) => {
       if (!user) {

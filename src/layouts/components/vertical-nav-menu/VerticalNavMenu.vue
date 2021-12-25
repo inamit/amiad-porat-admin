@@ -41,6 +41,12 @@
       />
       <nav-menu-section-title title="פעולות על משתמשים" />
       <nav-menu-link
+        exact
+        title="כל המשתמשים"
+        :to="{ name: 'listUsers' }"
+        :icon="icons.mdiFilterVariant"
+      />
+      <nav-menu-link
         title="הוספת חשבון"
         :to="{ name: 'addAccount' }"
         :icon="icons.mdiAccountPlusOutline"
@@ -62,6 +68,17 @@
           target="_blank"
         />
       </nav-menu-group>
+      <nav-menu-section-title title="ניהול" />
+      <nav-menu-link
+        title="קבוצות"
+        :to="{ name: 'listGroups' }"
+        :icon="icons.mdiAccountGroup"
+      />
+      <nav-menu-link
+        title="תגבורים"
+        :to="{ name: 'listLessons' }"
+        :icon="icons.mdiGoogleClassroom"
+      />
       <nav-menu-section-title title="USER INTERFACE" />
       <nav-menu-link
         title="Typography"
@@ -104,6 +121,9 @@ import {
   mdiFormSelect,
   mdiAccountCogOutline,
   mdiAccountPlusOutline,
+  mdiAccountGroup,
+  mdiFilterVariant,
+  mdiGoogleClassroom,
 } from "@mdi/js";
 import NavMenuSectionTitle from "./components/NavMenuSectionTitle.vue";
 import NavMenuGroup from "./components/NavMenuGroup.vue";
@@ -125,6 +145,7 @@ export default class VerticalNavMenu extends Vue {
 
   icons = {
     mdiHomeOutline,
+    mdiAccountGroup,
     mdiAlphaTBoxOutline,
     mdiEyeOutline,
     mdiCreditCardOutline,
@@ -133,6 +154,8 @@ export default class VerticalNavMenu extends Vue {
     mdiFormSelect,
     mdiAccountCogOutline,
     mdiAccountPlusOutline,
+    mdiFilterVariant,
+    mdiGoogleClassroom,
   };
 }
 </script>

@@ -11,8 +11,10 @@ import {
   setPersistence,
   getAuth,
   browserLocalPersistence,
+  connectAuthEmulator,
 } from "firebase/auth";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
+import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 
 // Vue.config.productionTip = false;
 Vue.prototype.$axios = axios;
@@ -29,8 +31,18 @@ const firebaseConfig = {
 console.log(firebaseConfig);
 initializeApp(firebaseConfig);
 
-const functions = getFunctions(getApp());
-connectFunctionsEmulator(functions, "localhost", 5001);
+if (process.env.NODE_ENV === "development") {
+  console.log("testing locally -- hitting local auth and firestore emulators");
+
+  const functions = getFunctions(getApp());
+  connectFunctionsEmulator(functions, "localhost", 5001);
+
+  const auth = getAuth(getApp());
+  connectAuthEmulator(auth, "http://localhost:9099");
+
+  const firestore = getFirestore(getApp());
+  connectFirestoreEmulator(firestore, "localhost", 8082);
+}
 
 setPersistence(getAuth(), browserLocalPersistence);
 Vue.use(VueCookies);
