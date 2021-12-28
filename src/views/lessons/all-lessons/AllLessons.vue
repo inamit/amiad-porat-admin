@@ -106,6 +106,19 @@
           </v-card>
         </v-dialog>
       </v-sheet>
+
+      <v-dialog v-model="addLessonDialog" max-width="500px">
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn color="primary" dark class="mb-2" v-bind="attrs" v-on="on">
+            הוספת תגבור
+          </v-btn>
+        </template>
+        <v-card>
+          <v-card-text
+            ><add-lesson @add-lesson="close"></add-lesson
+          ></v-card-text>
+        </v-card>
+      </v-dialog>
     </v-col>
   </v-row>
 </template>
@@ -132,8 +145,9 @@ import {
 import Lesson from "@/models/lesson";
 import User from "@/models/user";
 import StudentStatus from "@/models/studentStatus";
+import AddLesson from "@/views/lessons/add-lesson/AddLesson.vue";
 
-@Component({ name: "AllLessons" })
+@Component({ name: "AllLessons", components: { AddLesson } })
 export default class AllLessons extends Vue {
   icons = {
     mdiChevronRight,
@@ -172,6 +186,8 @@ export default class AllLessons extends Vue {
   end = null;
 
   ready = false;
+
+  addLessonDialog = false;
 
   viewDay({ date }) {
     this.focus = date;
@@ -283,6 +299,22 @@ export default class AllLessons extends Vue {
     this.ready = true;
     this.scrollToTime();
     this.updateTime();
+  }
+
+  async close(value) {
+    if (value instanceof Object) {
+      const teacher = await getDoc(doc(getFirestore(), "users", value.teacher));
+
+      this.groups.push({
+        id: value.id,
+        name: value.name,
+        teacher: teacher.data(),
+      });
+    }
+
+    if (value !== false) {
+      this.addLessonDialog = Boolean(value);
+    }
   }
 
   // #region "NOW" red line

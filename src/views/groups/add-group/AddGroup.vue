@@ -42,8 +42,6 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import { mdiAccountOutline, mdiRenameBox } from "@mdi/js";
-import { getFunctions, httpsCallable } from "firebase/functions";
-import { getAuth } from "firebase/auth";
 import {
   collection,
   getFirestore,
@@ -54,7 +52,6 @@ import {
   getDocs,
 } from "firebase/firestore";
 import Swal from "sweetalert2";
-import { FirebaseError } from "@firebase/util";
 import { Emit } from "vue-property-decorator";
 
 @Component({ name: "AddUser" })
