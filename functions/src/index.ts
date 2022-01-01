@@ -103,7 +103,7 @@ export const getUsersByRole = functions.https.onCall(async (data, context) => {
     .where("role", "==", data.role)
     .get();
 
-  const users: {}[] = [];
+  const users: any[] = [];
   docs.forEach((doc) => users.push({ uid: doc.id, ...doc.data() }));
 
   return users;
