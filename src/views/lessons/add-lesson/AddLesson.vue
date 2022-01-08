@@ -58,7 +58,15 @@
             @click:minute="$refs.menu.save(time)"
           ></v-time-picker>
         </v-menu>
-
+        <v-radio-group v-model="subject" row>
+          <v-radio label="מתמטיקה" value="math"></v-radio>
+          <v-radio label="אנגלית" value="english"></v-radio>
+        </v-radio-group>
+        <v-autocomplete v-model="teacher" :items="teachers" clearable>
+          <template v-slot:item="data">
+            {{ data.item.firstName }} {{ data.item.lastName }}
+          </template>
+        </v-autocomplete>
         <v-btn color="primary" @click="addLesson"> צור תגבור </v-btn>
       </v-form>
     </v-col>
@@ -91,6 +99,9 @@ export default class AddLesson extends Vue {
 
   dateMenu = false;
   date = null;
+
+  subject = "math";
+  teacher = "";
 
   teachers: Record<string, unknown>[] = [];
 
