@@ -34,7 +34,7 @@ jobs:
   deploy_for_production:
     runs-on: ubuntu-latest
     environment: production
-    if: gihthub.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout/@v2
       - run: npm ci && npm run build:prod
