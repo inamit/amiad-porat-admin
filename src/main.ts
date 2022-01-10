@@ -41,13 +41,13 @@ if (process.env.NODE_ENV === "development") {
   console.log("testing locally -- hitting local auth and firestore emulators");
 
   const functions = getFunctions(app);
-  // connectFunctionsEmulator(functions, "localhost", 5001);
+  connectFunctionsEmulator(functions, "localhost", 5001);
 
   const auth = getAuth(app);
-  // connectAuthEmulator(auth, "http://localhost:9099");
+  connectAuthEmulator(auth, "http://localhost:9099");
 
   const firestore = getFirestore(app);
-  // connectFirestoreEmulator(firestore, "localhost", 8082);
+  connectFirestoreEmulator(firestore, "localhost", 8082);
 }
 
 setPersistence(getAuth(), browserLocalPersistence);
