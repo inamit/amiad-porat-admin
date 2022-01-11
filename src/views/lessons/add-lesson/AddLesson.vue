@@ -159,7 +159,6 @@ export default class AddLesson extends Vue {
 
       const lessonData = {
         date: lessonDate,
-        hour: this.time,
         subject: this.subject,
         tutor: this.tutor,
         maxStudents: this.maxStudents,
