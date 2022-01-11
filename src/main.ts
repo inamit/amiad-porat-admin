@@ -17,7 +17,6 @@ import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
-// Vue.config.productionTip = false;
 Vue.prototype.$axios = axios;
 
 const firebaseConfig = {

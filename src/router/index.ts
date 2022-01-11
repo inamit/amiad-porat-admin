@@ -1,6 +1,5 @@
 import Vue from "vue";
 import VueRouter, { NavigationGuardNext, Route, RouteConfig } from "vue-router";
-import Home from "../views/Home.vue";
 import Login from "../views/pages/Login.vue";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
@@ -154,6 +153,7 @@ const router = new VueRouter({
 router.beforeEach((to: Route, from: Route, next: NavigationGuardNext) => {
   if (to.meta?.requiresAuth) {
     onAuthStateChanged(getAuth(), (user) => {
+      console.log(user);
       if (!user) {
         next("/login");
       }
