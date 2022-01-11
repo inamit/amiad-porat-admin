@@ -62,11 +62,25 @@
           <v-radio label="מתמטיקה" value="math"></v-radio>
           <v-radio label="אנגלית" value="english"></v-radio>
         </v-radio-group>
-        <v-autocomplete v-model="teacher" :items="teachers" clearable>
+        <v-select
+          v-model="tutor"
+          placeholder="מתרגל"
+          item-value="uid"
+          :items="tutors"
+        >
           <template v-slot:item="data">
             {{ data.item.firstName }} {{ data.item.lastName }}
           </template>
-        </v-autocomplete>
+          <template v-slot:selection="data">
+            {{ data.item.firstName }} {{ data.item.lastName }}
+          </template>
+        </v-select>
+        <v-text-field
+          type="number"
+          label="מספר מקסימלי של תלמידים"
+          v-model="maxStudents"
+        >
+        </v-text-field>
         <v-btn color="primary" @click="addLesson"> צור תגבור </v-btn>
       </v-form>
     </v-col>
@@ -88,22 +102,25 @@ import {
   getDocs,
 } from "firebase/firestore";
 import Swal from "sweetalert2";
-import { Emit } from "vue-property-decorator";
+import { Emit, Watch } from "vue-property-decorator";
+import { string } from "joi";
 
 @Component({ name: "AddLesson" })
 export default class AddLesson extends Vue {
   valid = true;
 
   timeMenu = false;
-  time = null;
+  time = "";
 
   dateMenu = false;
-  date = null;
+  date: string | null = null;
 
   subject = "math";
-  teacher = "";
+  tutor = "";
 
-  teachers: Record<string, unknown>[] = [];
+  maxStudents = 5;
+
+  tutors: Record<string, any>[] = [];
 
   rules = {
     timeRule: [(value: any) => Boolean(value) || "יש לבחור שעה"],
@@ -116,14 +133,14 @@ export default class AddLesson extends Vue {
   };
 
   async created() {
-    const teachersQuery = query(
+    const tutorsQuery = query(
       collection(getFirestore(), "users"),
       where("role", "==", "tutor")
     );
-    const teachersDocs = await getDocs(teachersQuery);
+    const tutorsDocs = await getDocs(tutorsQuery);
 
-    teachersDocs.forEach((doc) =>
-      this.teachers.push({ uid: doc.id, ...doc.data() })
+    tutorsDocs.forEach((doc) =>
+      this.tutors.push({ uid: doc.id, ...doc.data() })
     );
   }
 
@@ -134,15 +151,32 @@ export default class AddLesson extends Vue {
 
     try {
       Swal.showLoading();
-      //   const doc = await addDoc(collection(getFirestore(), "groups"), {
-      //     name: this.name,
-      //     teacher: this.teacher,
-      //   });
-      Swal.hideLoading();
-      Swal.fire({ title: "הקבוצה נוספה", icon: "success" });
+      const lessonDate = new Date(this.date!);
+      lessonDate.setHours(
+        parseInt(this.time.split(":")[0]),
+        parseInt(this.time.split(":")[1])
+      );
 
-      //   return { id: doc.id, name: this.name, teacher: this.teacher };
+      const lessonData = {
+        date: lessonDate,
+        hour: this.time,
+        subject: this.subject,
+        tutor: this.tutor,
+        maxStudents: this.maxStudents,
+        students: [],
+        isOpen: false,
+      };
+      const doc = await addDoc(
+        collection(getFirestore(), "lessons"),
+        lessonData
+      );
+
+      Swal.hideLoading();
+      Swal.fire({ title: "התגבור נוסף", icon: "success" });
+
+      return { id: doc.id, ...lessonData };
     } catch (error: unknown) {
+      console.log(error);
       Swal.hideLoading();
       if (error instanceof FirestoreError) {
         let message = "";
@@ -157,7 +191,7 @@ export default class AddLesson extends Vue {
         }
 
         Swal.fire({
-          title: "לא היה ניתן להוסיף את הקבוצה",
+          title: "לא היה ניתן להוסיף את התגבור",
           text: message,
           icon: "error",
         });
