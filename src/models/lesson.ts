@@ -11,7 +11,13 @@ export default class Lesson {
   private subject: string;
   name = "תגבור";
   get color() {
-    return this.isOpen ? (this.subject == "math" ? "primary" : "") : "#9E9E9E";
+    return this.subject == "math"
+      ? this.isOpen
+        ? "primary"
+        : "#c09eff"
+      : this.isOpen
+      ? "#ff8940"
+      : "#ffaa75";
   }
 
   constructor(
