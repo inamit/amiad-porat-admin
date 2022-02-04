@@ -16,6 +16,7 @@ import {
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import Gleap from "gleap";
 
 Vue.prototype.$axios = axios;
 
@@ -51,6 +52,10 @@ if (process.env.NODE_ENV === "development") {
 
 setPersistence(getAuth(), browserLocalPersistence);
 Vue.use(VueCookies);
+
+Gleap.initialize("BuFvw4c2u7py7vIjC0lo1ArvJTcEHVz8");
+Gleap.setLanguage("he");
+Gleap.setLiveSite(process.env.NODE_ENV !== "development");
 
 new Vue({
   router,
