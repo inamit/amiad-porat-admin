@@ -302,6 +302,7 @@ export default class AllLessons extends Vue {
     const endDate = new Date(end.date);
     endDate.setHours(23);
     endDate.setMinutes(59);
+
     const q = query(
       collection(getFirestore(), "lessons"),
       where("date", ">=", startDate),
@@ -312,43 +313,9 @@ export default class AllLessons extends Vue {
     const lessons = [];
 
     querySnapshot.forEach(async (lesson) => {
-      const tutor = await getDoc(
-        doc(getFirestore(), "users", lesson.get("tutor"))
-      );
+      let tutorObj = await this.getLessonTutor(lesson);
 
-      let tutorObj = null;
-      if (tutor.exists()) {
-        tutorObj = new User(
-          tutor.id,
-          tutor.get("firstName"),
-          tutor.get("lastName")
-        );
-      }
-
-      const students = lesson.get("students");
-
-      const studentsObj = [];
-
-      for (const student of students) {
-        const studentFirestore = await getDoc(
-          doc(getFirestore(), "users", student.student)
-        );
-
-        if (studentFirestore.exists()) {
-          const studentObj = new User(
-            studentFirestore.get("uid"),
-            studentFirestore.get("firstName"),
-            studentFirestore.get("lastName")
-          );
-
-          const objToPush = {
-            student: studentObj,
-            status: StudentStatus.Scheduled,
-          };
-
-          studentsObj.push(objToPush);
-        }
-      }
+      const studentsObj = await this.getLessonStudents(lesson);
 
       const lessonObj = new Lesson(
         lesson.id,
@@ -363,6 +330,52 @@ export default class AllLessons extends Vue {
     });
 
     this.events = lessons;
+  }
+
+  async getLessonStudents(lesson) {
+    const students = lesson.get("students");
+    const studentsObj = [];
+
+    for (const student of students) {
+      const studentFirestore = await getDoc(
+        doc(getFirestore(), "users", student.student)
+      );
+
+      if (studentFirestore.exists()) {
+        const studentObj = new User(
+          studentFirestore.get("uid"),
+          studentFirestore.get("firstName"),
+          studentFirestore.get("lastName")
+        );
+
+        const objToPush = {
+          student: studentObj,
+          status: StudentStatus.Scheduled, // TODO: Get from DB
+        };
+
+        studentsObj.push(objToPush);
+      }
+    }
+
+    return studentsObj;
+  }
+
+  async getLessonTutor(lesson) {
+    const tutor = await getDoc(
+      doc(getFirestore(), "users", lesson.get("tutor"))
+    );
+
+    let tutorObj = null;
+
+    if (tutor.exists()) {
+      tutorObj = new User(
+        tutor.id,
+        tutor.get("firstName"),
+        tutor.get("lastName")
+      );
+    }
+
+    return tutorObj;
   }
 
   async created() {

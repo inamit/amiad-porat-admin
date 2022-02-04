@@ -104,6 +104,7 @@ import {
 import Swal from "sweetalert2";
 import { Emit, Watch } from "vue-property-decorator";
 import { string } from "joi";
+import UserRole from "@/models/userRoles";
 
 @Component({ name: "AddLesson" })
 export default class AddLesson extends Vue {
@@ -135,7 +136,7 @@ export default class AddLesson extends Vue {
   async created() {
     const tutorsQuery = query(
       collection(getFirestore(), "users"),
-      where("role", "==", "tutor")
+      where("role", ">=", UserRole.TUTOR)
     );
     const tutorsDocs = await getDocs(tutorsQuery);
 

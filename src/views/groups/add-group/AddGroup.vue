@@ -53,6 +53,7 @@ import {
 } from "firebase/firestore";
 import Swal from "sweetalert2";
 import { Emit } from "vue-property-decorator";
+import UserRoles from "@/models/userRoles";
 
 @Component({ name: "AddUser" })
 export default class AddUser extends Vue {
@@ -75,7 +76,7 @@ export default class AddUser extends Vue {
   async created() {
     const teachersQuery = query(
       collection(getFirestore(), "users"),
-      where("role", "==", "teacher")
+      where("role", ">=", UserRoles.TEACHER)
     );
     const teachersDocs = await getDocs(teachersQuery);
 

@@ -168,6 +168,7 @@ import {
   getFirestore,
   query,
 } from "firebase/firestore";
+import UserRole from "@/models/userRoles";
 
 @Component({ name: "AddUser" })
 export default class AddUser extends Vue {
@@ -256,10 +257,10 @@ export default class AddUser extends Vue {
   };
 
   private roles = [
-    { text: "תלמיד", value: "student" },
-    { text: "מתרגל", value: "tutor" },
-    { text: "מורה", value: "teacher" },
-    { text: "מנהל", value: "admin" },
+    { text: "תלמיד", value: UserRole.STUDENT },
+    { text: "מתרגל", value: UserRole.TUTOR },
+    { text: "מורה", value: UserRole.TEACHER },
+    { text: "מנהל", value: UserRole.ADMIN },
   ];
   private grades = [
     { text: "ז", value: 7 },
@@ -328,6 +329,7 @@ export default class AddUser extends Vue {
       Swal.hideLoading();
       Swal.fire({ icon: "success", title: "המשתמש נוסף בהצלחה!" });
     } catch (error: any) {
+      console.log(error);
       Swal.hideLoading();
       Swal.fire({
         icon: "error",
