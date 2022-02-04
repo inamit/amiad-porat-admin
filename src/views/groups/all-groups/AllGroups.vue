@@ -9,13 +9,13 @@
   >
     <template v-slot:top>
       <v-toolbar flat>
-        <v-toolbar-title>קבוצות</v-toolbar-title>
+        <v-toolbar-title>שיעורים</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
         <v-spacer></v-spacer>
         <v-dialog v-model="dialog" max-width="500px">
           <template v-slot:activator="{ on, attrs }">
             <v-btn color="primary" dark class="mb-2" v-bind="attrs" v-on="on">
-              הוספת קבוצה
+              הוספת שיעור
             </v-btn>
           </template>
           <v-card>
@@ -73,7 +73,7 @@ export default class AllGroups extends Vue {
   loading = true;
 
   headers = [
-    { text: "שם הקבוצה", value: "name" },
+    { text: "שם השיעור", value: "name" },
     { text: "מורה", value: "teacher" },
     { text: "", value: "actions", align: "left" },
   ];
@@ -110,7 +110,7 @@ export default class AllGroups extends Vue {
   async deleteGroup(group: any) {
     const { isConfirmed } = await Swal.fire({
       icon: "warning",
-      title: "אתה בטוח שברצונך למחוק את הקבוצה הזאת?",
+      title: "אתה בטוח שברצונך למחוק את השיעור הזה?",
       confirmButtonText: "כן",
       cancelButtonText: "לא",
       showConfirmButton: true,

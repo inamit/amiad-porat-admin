@@ -48,7 +48,7 @@
       />
       <nav-menu-section-title title="ניהול" />
       <nav-menu-link
-        title="קבוצות"
+        title="שיעורים"
         :to="{ name: 'listGroups' }"
         :icon="icons.mdiAccountGroup"
       />

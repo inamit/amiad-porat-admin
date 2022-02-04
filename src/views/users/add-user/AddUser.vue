@@ -121,7 +121,7 @@
           item-value="id"
           v-model="group"
           required
-          label="קבוצה"
+          label="שיעור"
           outlined
           :prepend-inner-icon="icons.mdiGoogleClassroom"
           :rules="rules.groupRules"
@@ -251,7 +251,7 @@ export default class AddUser extends Vue {
       (value: string) =>
         Joi.string()
           .required()
-          .messages({ "string.empty": "יש לבחור קבוצה" })
+          .messages({ "string.empty": "יש לבחור שיעור" })
           .validate(value).error?.message,
     ],
   };
