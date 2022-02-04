@@ -200,6 +200,7 @@ import Lesson from "@/models/lesson";
 import User from "@/models/user";
 import StudentStatus from "@/models/studentStatus";
 import AddLesson from "@/views/lessons/add-lesson/AddLesson.vue";
+import UserRole from "@/models/userRoles";
 
 @Component({ name: "AllLessons", components: { AddLesson } })
 export default class AllLessons extends Vue {
@@ -381,7 +382,7 @@ export default class AllLessons extends Vue {
   async created() {
     const tutorsQuery = query(
       collection(getFirestore(), "users"),
-      where("role", "==", "tutor")
+      where("role", ">=", UserRole.TUTOR)
     );
     const tutorsDocs = await getDocs(tutorsQuery);
 
