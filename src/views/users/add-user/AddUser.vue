@@ -47,6 +47,7 @@
           type="tel"
           placeholder="מספר טלפון"
           required
+          gleap-ignore="value"
           :rules="rules.phoneRules"
         />
 
