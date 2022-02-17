@@ -1,7 +1,7 @@
 export default class User {
-  private uid: string;
-  private firstName: string;
-  private lastName: string;
+  public uid: string;
+  public firstName: string;
+  public lastName: string;
 
   constructor(uid: string, firstName: string, lastName: string) {
     this.uid = uid;

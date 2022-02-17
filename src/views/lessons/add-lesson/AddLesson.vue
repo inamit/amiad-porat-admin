@@ -105,6 +105,9 @@ import Swal from "sweetalert2";
 import { Emit, Watch } from "vue-property-decorator";
 import { string } from "joi";
 import UserRole from "@/models/userRoles";
+import Gleap from "gleap";
+import Lesson from "@/models/lesson";
+import User from "@/models/user";
 
 @Component({ name: "AddLesson" })
 export default class AddLesson extends Vue {
@@ -121,7 +124,7 @@ export default class AddLesson extends Vue {
 
   maxStudents = 5;
 
-  tutors: Record<string, any>[] = [];
+  tutors: User[] = [];
 
   rules = {
     timeRule: [(value: any) => Boolean(value) || "יש לבחור שעה"],
@@ -141,7 +144,9 @@ export default class AddLesson extends Vue {
     const tutorsDocs = await getDocs(tutorsQuery);
 
     tutorsDocs.forEach((doc) =>
-      this.tutors.push({ uid: doc.id, ...doc.data() })
+      this.tutors.push(
+        new User(doc.id, doc.get("firstName"), doc.get("lastName"))
+      )
     );
   }
 
@@ -157,6 +162,10 @@ export default class AddLesson extends Vue {
         parseInt(this.time.split(":")[0]),
         parseInt(this.time.split(":")[1])
       );
+
+      if (!(await this.isTutorAvailable(lessonDate))) {
+        throw new Error("המתרגל שנבחר לא פנוי בשעה שנבחרה");
+      }
 
       const lessonData = {
         date: lessonDate,
@@ -174,12 +183,21 @@ export default class AddLesson extends Vue {
       Swal.hideLoading();
       Swal.fire({ title: "התגבור נוסף", icon: "success" });
 
-      return { id: doc.id, ...lessonData };
-    } catch (error: unknown) {
+      const lessonObj = new Lesson(
+        doc.id,
+        lessonData.date,
+        lessonData.isOpen,
+        this.tutors.find((tutor) => tutor.uid === this.tutor)!,
+        lessonData.students,
+        lessonData.subject
+      );
+
+      return lessonObj;
+    } catch (error: any) {
       console.log(error);
       Swal.hideLoading();
+      let message = "";
       if (error instanceof FirestoreError) {
-        let message = "";
         switch (error.code) {
           case "permission-denied":
           case "unauthenticated":
@@ -189,16 +207,33 @@ export default class AddLesson extends Vue {
             message = "קרתה תקלה. פנה לתמיכה";
             break;
         }
-
-        Swal.fire({
-          title: "לא היה ניתן להוסיף את התגבור",
-          text: message,
-          icon: "error",
-        });
+      } else {
+        message = error.message;
       }
+
+      Swal.fire({
+        title: "לא היה ניתן להוסיף את התגבור",
+        text: message,
+        icon: "error",
+      });
     }
 
     return false;
+  }
+
+  private async isTutorAvailable(lessonDate: Date) {
+    const existingLessons = await getDocs(
+      query(
+        collection(getFirestore(), "lessons"),
+        where("date", "==", lessonDate)
+      )
+    );
+
+    return (
+      existingLessons.docs.filter(
+        (lesson) => lesson.get("tutor") === this.tutor
+      ).length === 0
+    );
   }
 }
 </script>
