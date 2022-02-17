@@ -6,7 +6,7 @@ export default class Lesson {
   private start: Date;
   private end: Date;
   private isOpen: boolean;
-  private tutor: User | null;
+  public tutor: User | null;
   private students: { student: User; status: StudentStatus }[];
   private subject: string;
   name = "תגבור";
@@ -18,6 +18,10 @@ export default class Lesson {
       : this.isOpen
       ? "#ff8940"
       : "#ffaa75";
+  }
+
+  static empty(): Lesson {
+    return new Lesson("", new Date(), false, new User("", "", ""), [], "");
   }
 
   constructor(

@@ -82,95 +82,12 @@
             <br />
           </template>
         </v-calendar>
-        <v-dialog
-          v-model="selectedOpen"
-          :persistent="editingEvent"
-          :activator="selectedElement"
-        >
-          <v-card flat>
-            <v-toolbar :color="selectedEvent.color" dark>
-              <v-btn v-if="!editingEvent" @click="editingEvent = true" icon>
-                <v-icon>{{ icons.mdiPencil }}</v-icon>
-              </v-btn>
-              <v-btn v-if="editingEvent" @click="finishEditing()" icon>
-                <v-icon>{{ icons.mdiCheck }}</v-icon>
-              </v-btn>
-              <v-toolbar-title v-html="selectedEvent.name"></v-toolbar-title>
-              <v-spacer></v-spacer>
-              <v-btn icon>
-                <v-icon>{{ icons.mdiDotsVertical }}</v-icon>
-              </v-btn>
-            </v-toolbar>
-            <v-card-text style="display: flex; flex-direction: column">
-              <h1 style="align-self: center">
-                <table>
-                  <tr>
-                    <td><span class="ml-2">מתרגל:</span></td>
-                    <td v-if="!editingEvent">
-                      {{ selectedEvent.tutor.firstName }}
-                      {{ selectedEvent.tutor.lastName }}
-                    </td>
-                    <td v-if="editingEvent">
-                      <v-select
-                        v-model="selectedEvent.tutor"
-                        item-value="uid"
-                        :items="tutors"
-                      >
-                        <template v-slot:item="data">
-                          {{ data.item.firstName }} {{ data.item.lastName }}
-                        </template>
-                        <template v-slot:selection="data">
-                          {{ data.item.firstName }} {{ data.item.lastName }}
-                        </template>
-                      </v-select>
-                    </td>
-                  </tr>
-                </table>
-              </h1>
-              <v-switch
-                class="mt-5"
-                style="align-self: center"
-                :label="
-                  selectedEvent.isOpen ? 'פתוח לתלמידים' : 'סגור לתלמידים'
-                "
-                v-model="selectedEvent.isOpen"
-                :readonly="!editingEvent"
-                :color="selectedEvent.color"
-              >
-              </v-switch>
-              <h1>תלמידים: {{ selectedEvent.students.length }}</h1>
-              <v-chip-group v-for="status in statuses" :key="status" column>
-                <v-col cols="2" align-self="center">
-                  <h2>{{ statusLabel(status) }}:</h2>
-                </v-col>
-                <v-col style="text-align: right">
-                  <v-chip
-                    v-for="student in selectedEvent.students.filter(
-                      (element) => element.status === status
-                    )"
-                    :key="student.student.uid"
-                  >
-                    {{ student.student.firstName }}
-                    {{ student.student.lastName }}
-                  </v-chip>
-                </v-col>
-              </v-chip-group>
-              <span v-html="selectedEvent.details"></span>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn
-                text
-                color="secondary"
-                @click="
-                  selectedOpen = false;
-                  editingEvent = false;
-                "
-              >
-                סגור (מבלי לשמור שינויים)
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+        <view-lesson
+          :selectedOpen="selectedOpen"
+          :selectedElement="selectedElement"
+          :selectedEvent="selectedEvent"
+          @close-lesson-view="closeLessonView"
+        ></view-lesson>
       </v-sheet>
     </v-col>
   </v-row>
@@ -200,9 +117,9 @@ import Lesson from "@/models/lesson";
 import User from "@/models/user";
 import StudentStatus from "@/models/studentStatus";
 import AddLesson from "@/views/lessons/add-lesson/AddLesson.vue";
-import UserRole from "@/models/userRoles";
+import ViewLesson from "@/views/lessons/view-lesson/ViewLesson.vue";
 
-@Component({ name: "AllLessons", components: { AddLesson } })
+@Component({ name: "AllLessons", components: { AddLesson, ViewLesson } })
 export default class AllLessons extends Vue {
   icons = {
     mdiChevronRight,
@@ -212,21 +129,6 @@ export default class AllLessons extends Vue {
     mdiMenuDown,
     mdiCheck,
   };
-
-  statuses = Object.values(StudentStatus);
-
-  statusLabel(status) {
-    switch (status) {
-      case StudentStatus.Scheduled:
-        return "קבעו";
-      case StudentStatus.Canceled:
-        return "ביטלו";
-      case StudentStatus.Missed:
-        return "לא הגיעו";
-      case StudentStatus.Arrived:
-        return "הגיעו";
-    }
-  }
 
   focus = "";
   type = "week";
@@ -241,19 +143,12 @@ export default class AllLessons extends Vue {
   start = null;
   end = null;
 
-  tutors = [];
-
   ready = false;
 
   addLessonDialog = false;
 
-  editingEvent = false;
-
-  finishEditing() {
-    this.selectedEvent.tutor = this.tutors.filter(
-      (tutor) => tutor.uid === this.selectedEvent.tutor
-    )[0];
-    this.editingEvent = false;
+  closeLessonView(value) {
+    this.selectedOpen = value;
   }
 
   viewDay({ date }) {
@@ -377,18 +272,6 @@ export default class AllLessons extends Vue {
     }
 
     return tutorObj;
-  }
-
-  async created() {
-    const tutorsQuery = query(
-      collection(getFirestore(), "users"),
-      where("role", ">=", UserRole.TUTOR)
-    );
-    const tutorsDocs = await getDocs(tutorsQuery);
-
-    tutorsDocs.forEach((doc) =>
-      this.tutors.push({ uid: doc.id, ...doc.data() })
-    );
   }
 
   mounted() {
