@@ -47,19 +47,18 @@ import {
   getFirestore,
   addDoc,
   FirestoreError,
-  query,
-  where,
-  getDocs,
 } from "firebase/firestore";
 import Swal from "sweetalert2";
 import { Emit } from "vue-property-decorator";
 import UserRoles from "@/enums/userRoles";
+import { getUsersWithRoleBiggerThan } from "@/DAL/user.dal";
+import User from "@/models/user";
 
 @Component({ name: "AddUser" })
 export default class AddUser extends Vue {
   valid = true;
 
-  teachers: Record<string, unknown>[] = [];
+  teachers: User[] = [];
 
   name = "";
   teacher = "";
@@ -74,15 +73,7 @@ export default class AddUser extends Vue {
   };
 
   async created() {
-    const teachersQuery = query(
-      collection(getFirestore(), "users"),
-      where("role", ">=", UserRoles.TEACHER)
-    );
-    const teachersDocs = await getDocs(teachersQuery);
-
-    teachersDocs.forEach((doc) =>
-      this.teachers.push({ uid: doc.id, ...doc.data() })
-    );
+    this.teachers = await getUsersWithRoleBiggerThan(UserRoles.TEACHER);
   }
 
   @Emit("add-group")
