@@ -41,6 +41,20 @@ export const getUsersWithRole = async (role: UserRole) => {
   return queryRole("==", role);
 };
 
+export const getUsersWithRoleAndExclude = async (
+  role: UserRole,
+  userId: string[]
+) => {
+  const userQuery = query(
+    collection(firestore, "users"),
+    where("role", "==", role),
+    where(documentId(), "not-in", userId)
+  );
+  const snapshot = await getDocs(userQuery.withConverter(userConverter));
+
+  return snapshot.docs.map((doc) => doc.data());
+};
+
 const queryRole = async (operator: WhereFilterOp, role: UserRole) => {
   const userQuery = query(
     collection(firestore, "users"),

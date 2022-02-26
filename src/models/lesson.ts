@@ -59,6 +59,16 @@ export default class Lesson {
     this.tutor = tutor;
   }
 
+  isStudentInLesson(studentId: string): boolean {
+    return Boolean(
+      this.students.find(
+        (value) =>
+          value.status === StudentStatus.Scheduled &&
+          value.student?.uid === studentId
+      )
+    );
+  }
+
   private static async loadTutor(lesson: Lesson, id: string) {
     lesson.tutor = await getUserByID(id);
   }

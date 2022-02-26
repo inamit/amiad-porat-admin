@@ -135,7 +135,11 @@ import { mdiCheck, mdiDotsVertical, mdiPencil } from "@mdi/js";
 import Vue from "vue";
 import Component from "vue-class-component";
 import { Emit, Prop, Watch } from "vue-property-decorator";
-import { getUsersWithRole, getUsersWithRoleBiggerThan } from "@/DAL/user.dal";
+import {
+  getUsersWithRole,
+  getUsersWithRoleAndExclude,
+  getUsersWithRoleBiggerThan,
+} from "@/DAL/user.dal";
 import { addStudentsToLesson } from "@/DAL/lesson.dal";
 import Swal from "sweetalert2";
 
@@ -185,7 +189,6 @@ export default class ViewLesson extends Vue {
 
   created() {
     this.getTutors();
-    this.getStudents();
   }
 
   async getTutors() {
@@ -196,16 +199,18 @@ export default class ViewLesson extends Vue {
     this.isLoadingTutors = false;
   }
 
+  @Watch("selectedEvent")
   async getStudents() {
     this.isLoadingStudents = true;
 
-    this.students = await getUsersWithRole(UserRole.STUDENT);
-    this.students = this.students.filter(
-      (student) =>
-        !this.selectedEvent.students.find(
-          (existingStudent) => existingStudent.student?.uid === student.uid
-        )
-    );
+    if (this.selectedEvent.students.length > 0) {
+      this.students = await getUsersWithRoleAndExclude(
+        UserRole.STUDENT,
+        this.selectedEvent.students.map((student) => student.student!.uid)
+      );
+    } else {
+      this.students = await getUsersWithRole(UserRole.STUDENT);
+    }
 
     this.isLoadingStudents = false;
   }
@@ -272,9 +277,7 @@ export default class ViewLesson extends Vue {
     return (
       (student.firstName.includes(searchValue) ||
         student.lastName.includes(searchValue)) &&
-      !this.selectedEvent.students.find(
-        (value) => value.student?.uid === student.uid
-      )
+      !this.selectedEvent.isStudentInLesson(student.uid)
     );
   }
 
