@@ -104,20 +104,10 @@ import {
   mdiMenuDown,
   mdiCheck,
 } from "@mdi/js";
-import {
-  collection,
-  getDoc,
-  getDocs,
-  getFirestore,
-  query,
-  where,
-  doc,
-} from "@firebase/firestore";
 import Lesson from "@/models/lesson";
-import User from "@/models/user";
-import StudentStatus from "@/models/studentStatus";
 import AddLesson from "@/views/lessons/add-lesson/AddLesson.vue";
 import ViewLesson from "@/views/lessons/view-lesson/ViewLesson.vue";
+import { getAllLessonsBetween } from "@/DAL/lesson.dal";
 
 @Component({ name: "AllLessons", components: { AddLesson, ViewLesson } })
 export default class AllLessons extends Vue {
@@ -136,7 +126,7 @@ export default class AllLessons extends Vue {
     week: "שבועי",
     day: "יומי",
   };
-  selectedEvent = { tutor: { firstName: "", lastName: "" }, students: [] };
+  selectedEvent = Lesson.empty(); // { tutor: { firstName: "", lastName: "" }, students: [] };
   selectedElement = null;
   selectedOpen = false;
   events = [];
@@ -199,79 +189,7 @@ export default class AllLessons extends Vue {
     endDate.setHours(23);
     endDate.setMinutes(59);
 
-    const q = query(
-      collection(getFirestore(), "lessons"),
-      where("date", ">=", startDate),
-      where("date", "<=", endDate)
-    );
-
-    const querySnapshot = await getDocs(q);
-    const lessons = [];
-
-    querySnapshot.forEach(async (lesson) => {
-      let tutorObj = await this.getLessonTutor(lesson);
-
-      const studentsObj = await this.getLessonStudents(lesson);
-
-      const lessonObj = new Lesson(
-        lesson.id,
-        lesson.get("date").toDate(),
-        lesson.get("isOpen"),
-        tutorObj,
-        studentsObj,
-        lesson.get("subject")
-      );
-
-      lessons.push(lessonObj);
-    });
-
-    this.events = lessons;
-  }
-
-  async getLessonStudents(lesson) {
-    const students = lesson.get("students");
-    const studentsObj = [];
-
-    for (const student of students) {
-      const studentFirestore = await getDoc(
-        doc(getFirestore(), "users", student.student)
-      );
-
-      if (studentFirestore.exists()) {
-        const studentObj = new User(
-          studentFirestore.get("uid"),
-          studentFirestore.get("firstName"),
-          studentFirestore.get("lastName")
-        );
-
-        const objToPush = {
-          student: studentObj,
-          status: StudentStatus.Scheduled, // TODO: Get from DB
-        };
-
-        studentsObj.push(objToPush);
-      }
-    }
-
-    return studentsObj;
-  }
-
-  async getLessonTutor(lesson) {
-    const tutor = await getDoc(
-      doc(getFirestore(), "users", lesson.get("tutor"))
-    );
-
-    let tutorObj = null;
-
-    if (tutor.exists()) {
-      tutorObj = new User(
-        tutor.id,
-        tutor.get("firstName"),
-        tutor.get("lastName")
-      );
-    }
-
-    return tutorObj;
+    this.events = await getAllLessonsBetween(startDate, endDate);
   }
 
   mounted() {

@@ -169,7 +169,7 @@ import {
   getFirestore,
   query,
 } from "firebase/firestore";
-import UserRole from "@/models/userRoles";
+import UserRole from "@/enums/userRoles";
 
 @Component({ name: "AddUser" })
 export default class AddUser extends Vue {

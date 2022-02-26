@@ -102,12 +102,11 @@ import {
   getDocs,
 } from "firebase/firestore";
 import Swal from "sweetalert2";
-import { Emit, Watch } from "vue-property-decorator";
-import { string } from "joi";
-import UserRole from "@/models/userRoles";
-import Gleap from "gleap";
+import { Emit } from "vue-property-decorator";
+import UserRole from "@/enums/userRoles";
 import Lesson from "@/models/lesson";
 import User from "@/models/user";
+import { getUsersWithRoleBiggerThan } from "@/DAL/user.dal";
 
 @Component({ name: "AddLesson" })
 export default class AddLesson extends Vue {
@@ -137,17 +136,7 @@ export default class AddLesson extends Vue {
   };
 
   async created() {
-    const tutorsQuery = query(
-      collection(getFirestore(), "users"),
-      where("role", ">=", UserRole.TUTOR)
-    );
-    const tutorsDocs = await getDocs(tutorsQuery);
-
-    tutorsDocs.forEach((doc) =>
-      this.tutors.push(
-        new User(doc.id, doc.get("firstName"), doc.get("lastName"))
-      )
-    );
+    this.tutors = await getUsersWithRoleBiggerThan(UserRole.TUTOR);
   }
 
   @Emit("add-lesson")

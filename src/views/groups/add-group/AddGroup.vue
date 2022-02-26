@@ -53,7 +53,7 @@ import {
 } from "firebase/firestore";
 import Swal from "sweetalert2";
 import { Emit } from "vue-property-decorator";
-import UserRoles from "@/models/userRoles";
+import UserRoles from "@/enums/userRoles";
 
 @Component({ name: "AddUser" })
 export default class AddUser extends Vue {
