@@ -107,7 +107,7 @@
           :rules="rules.roleRules"
         ></v-select>
         <v-select
-          v-if="role === 'student'"
+          v-if="role === UserRole.STUDENT"
           :items="grades"
           v-model="grade"
           required
@@ -117,7 +117,7 @@
         ></v-select>
 
         <v-select
-          v-if="role === 'student'"
+          v-if="role === UserRole.STUDENT"
           :items="groups"
           item-value="id"
           v-model="group"
@@ -161,15 +161,9 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import { Watch } from "vue-property-decorator";
 import Swal from "sweetalert2";
 import Joi from "joi";
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  getFirestore,
-  query,
-} from "firebase/firestore";
 import UserRole from "@/enums/userRoles";
+import { getAllGroups } from "@/DAL/group.dal";
+import Group from "@/models/group";
 
 @Component({ name: "AddUser" })
 export default class AddUser extends Vue {
@@ -179,10 +173,12 @@ export default class AddUser extends Vue {
   email = "";
   phoneNo = "";
   password = "";
-  role = "";
+  role: number | undefined = undefined;
   birthDate = "";
   grade = "";
   group = "";
+
+  UserRole: any = UserRole;
 
   get formattedBirthDate() {
     if (!this.birthDate) return null;
@@ -236,9 +232,9 @@ export default class AddUser extends Vue {
     ],
     roleRules: [
       (value: string) =>
-        Joi.string()
+        Joi.number()
           .required()
-          .messages({ "string.empty": "יש לבחור את סוג המשתמש" })
+          .messages({ "any.required": "יש לבחור את סוג המשתמש" })
           .validate(value).error?.message,
     ],
     gradeRules: [
@@ -272,23 +268,12 @@ export default class AddUser extends Vue {
     { text: "יב", value: 12 },
   ];
 
-  private groups: Record<string, unknown>[] = [];
+  private groups: Group[] = [];
 
   async getGroups() {
     this.groups = [];
-    const groups = await getDocs(query(collection(getFirestore(), "groups")));
 
-    groups.forEach(async (group) => {
-      const teacher = await getDoc(
-        doc(getFirestore(), "users", group.get("teacher"))
-      );
-
-      this.groups.push({
-        id: group.id,
-        name: group.get("name"),
-        teacher: teacher.data(),
-      });
-    });
+    this.groups = await getAllGroups();
   }
 
   created() {
