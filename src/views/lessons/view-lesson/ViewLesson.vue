@@ -61,6 +61,7 @@
           multiple
           label="תלמידים להוספה"
           v-model="studentsToAdd"
+          item-value="uid"
           :items="students"
           :loading="isLoadingStudents"
           :filter="searchStudent"
@@ -87,13 +88,21 @@
             </v-list-item>
           </template>
           <template v-slot:append-outer>
-            <v-btn elevation="2" color="primary"> הוספת תלמידים נבחרים </v-btn>
+            <v-btn
+              elevation="2"
+              color="primary"
+              @click="addStudents"
+              :loading="isAddingStudents"
+            >
+              הוספת תלמידים נבחרים
+            </v-btn>
           </template>
         </v-autocomplete>
         <v-chip-group v-for="status in statuses" :key="status" column>
           <v-col cols="2" align-self="center">
             <h2>{{ statusLabel(status) }}:</h2>
           </v-col>
+          <v-divider vertical></v-divider>
           <v-col style="text-align: right">
             <v-chip
               v-for="student in selectedEvent.students.filter(
@@ -127,6 +136,8 @@ import Vue from "vue";
 import Component from "vue-class-component";
 import { Emit, Prop, Watch } from "vue-property-decorator";
 import { getUsersWithRole, getUsersWithRoleBiggerThan } from "@/DAL/user.dal";
+import { addStudentsToLesson } from "@/DAL/lesson.dal";
+import Swal from "sweetalert2";
 
 @Component({ name: "ViewLesson" })
 export default class ViewLesson extends Vue {
@@ -142,10 +153,12 @@ export default class ViewLesson extends Vue {
   editingEvent = false;
   tutors: User[] = [];
   students: User[] = [];
-  studentsToAdd: User[] = [];
+  studentsToAdd: string[] = [];
 
   isLoadingTutors = true;
   isLoadingStudents = true;
+
+  isAddingStudents = false;
 
   selectedTutor = this.selectedEvent.tutor?.uid;
 
@@ -187,17 +200,63 @@ export default class ViewLesson extends Vue {
     this.isLoadingStudents = true;
 
     this.students = await getUsersWithRole(UserRole.STUDENT);
+    this.students = this.students.filter(
+      (student) =>
+        !this.selectedEvent.students.find(
+          (existingStudent) => existingStudent.student?.uid === student.uid
+        )
+    );
 
     this.isLoadingStudents = false;
   }
 
   removeStudentFromSelection(studentToRemove: User) {
     this.studentsToAdd = this.studentsToAdd.filter(
-      (student) => student.uid !== studentToRemove.uid
+      (student) => student !== studentToRemove.uid
     );
   }
 
-  addStudents() {}
+  async addStudents() {
+    this.isAddingStudents = true;
+
+    try {
+      const added = await addStudentsToLesson(
+        this.selectedEvent.id,
+        this.studentsToAdd
+      );
+      this.cleanStudentLeftover(added);
+    } catch (err: any) {
+      Swal.fire({
+        icon: "error",
+        title: "לא הצלחנו להוסיף את התלמידים.",
+        text: err,
+      });
+    } finally {
+      this.isAddingStudents = false;
+    }
+  }
+
+  private cleanStudentLeftover(
+    added: { student: string; status: StudentStatus }[]
+  ) {
+    this.studentsToAdd = [];
+    this.selectedEvent.students.push(
+      ...added.map((value) => {
+        return {
+          student: this.students.find(
+            (student) => student.uid === value.student
+          ),
+          status: value.status,
+        };
+      })
+    );
+    this.students = this.students.filter(
+      (student) =>
+        !this.selectedEvent.students.find(
+          (existingStudent) => existingStudent.student?.uid === student.uid
+        )
+    );
+  }
 
   finishEditing() {
     this.selectedEvent.tutor = this.tutors.find(
