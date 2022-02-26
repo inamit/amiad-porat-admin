@@ -5,14 +5,14 @@
     :activator="selectedElement"
   >
     <v-card flat>
-      <v-toolbar :color="selectedEvent.color" dark>
+      <v-toolbar :color="updatedEvent.color" dark>
         <v-btn v-if="!editingEvent" @click="editingEvent = true" icon>
           <v-icon>{{ icons.mdiPencil }}</v-icon>
         </v-btn>
         <v-btn v-if="editingEvent" @click="finishEditing()" icon>
           <v-icon>{{ icons.mdiCheck }}</v-icon>
         </v-btn>
-        <v-toolbar-title v-html="selectedEvent.name"></v-toolbar-title>
+        <v-toolbar-title v-html="updatedEvent.name"></v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn icon>
           <v-icon>{{ icons.mdiDotsVertical }}</v-icon>
@@ -24,8 +24,8 @@
             <tr>
               <td><span class="ml-2">מתרגל:</span></td>
               <td v-if="!editingEvent">
-                {{ selectedEvent.tutor.firstName }}
-                {{ selectedEvent.tutor.lastName }}
+                {{ updatedEvent.tutor.firstName }}
+                {{ updatedEvent.tutor.lastName }}
               </td>
               <td v-if="editingEvent">
                 <v-select
@@ -48,13 +48,13 @@
         <v-switch
           class="mt-5"
           style="align-self: center"
-          :label="selectedEvent.isOpen ? 'פתוח לתלמידים' : 'סגור לתלמידים'"
-          v-model="selectedEvent.isOpen"
+          :label="updatedEvent.isOpen ? 'פתוח לתלמידים' : 'סגור לתלמידים'"
+          v-model="updatedEvent.isOpen"
           :readonly="!editingEvent"
-          :color="selectedEvent.color"
+          :color="updatedEvent.color"
         >
         </v-switch>
-        <h1>תלמידים: {{ selectedEvent.students.length }}</h1>
+        <h1>תלמידים: {{ updatedEvent.students.length }}</h1>
         <v-autocomplete
           chips
           deletable-chips
@@ -105,7 +105,7 @@
           <v-divider vertical></v-divider>
           <v-col style="text-align: right">
             <v-chip
-              v-for="student in selectedEvent.students.filter(
+              v-for="student in updatedEvent.students.filter(
                 (element) => element.status === status
               )"
               :key="student.student.uid"
@@ -115,12 +115,18 @@
             </v-chip>
           </v-col>
         </v-chip-group>
-        <span v-html="selectedEvent.details"></span>
       </v-card-text>
       <v-card-actions>
-        <v-btn text color="secondary" @click="closeLessonView">
+        <v-btn text color="primary" @click="closeLessonView">
           <span v-if="editingEvent">שמור ו</span>סגור
         </v-btn>
+        <v-btn
+          text
+          color="secondary"
+          v-if="editingEvent"
+          @click="closeLessonViewWithoutSave"
+          >ביטול</v-btn
+        >
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -154,6 +160,7 @@ export default class ViewLesson extends Vue {
   @Prop()
   selectedOpen = false;
 
+  updatedEvent: Lesson = Lesson.empty();
   editingEvent = false;
   tutors: User[] = [];
   students: User[] = [];
@@ -197,6 +204,11 @@ export default class ViewLesson extends Vue {
     this.tutors = await getUsersWithRoleBiggerThan(UserRole.TUTOR);
 
     this.isLoadingTutors = false;
+  }
+
+  @Watch("selectedEvent")
+  changeUpdated() {
+    Object.assign(this.updatedEvent, this.selectedEvent);
   }
 
   @Watch("selectedEvent")
@@ -264,12 +276,23 @@ export default class ViewLesson extends Vue {
   }
 
   finishEditing() {
-    this.selectedEvent.tutor = this.tutors.find(
+    this.updatedEvent.tutor = this.tutors.find(
       (tutor) => tutor.uid === this.selectedTutor
     )!;
 
-    updateLesson(this.selectedEvent.id, this.selectedEvent);
+    try {
+      updateLesson(this.selectedEvent.id, this.updatedEvent);
 
+      this.selectedEvent.tutor = this.tutors.find(
+        (tutor) => tutor.uid === this.selectedTutor
+      )!;
+      this.selectedEvent.isOpen = this.updatedEvent.isOpen;
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "לא הצלחנו לשמור את השינויים",
+      });
+    }
     this.editingEvent = false;
   }
 
@@ -287,6 +310,13 @@ export default class ViewLesson extends Vue {
       this.finishEditing();
     }
 
+    return !this.selectedOpen;
+  }
+
+  @Emit("close-lesson-view")
+  closeLessonViewWithoutSave() {
+    this.editingEvent = false;
+    Object.assign(this.updatedEvent, this.selectedEvent);
     return !this.selectedOpen;
   }
 
