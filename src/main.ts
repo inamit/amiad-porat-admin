@@ -54,8 +54,12 @@ setPersistence(getAuth(), browserLocalPersistence);
 Vue.use(VueCookies);
 
 Gleap.initialize("BuFvw4c2u7py7vIjC0lo1ArvJTcEHVz8");
-Gleap.setLanguage("he");
+Gleap.setLanguage("en");
+// Gleap.setLanguage("he");
 Gleap.setLiveSite(process.env.NODE_ENV !== "development");
+Gleap.attachCustomData({
+  app: "admin",
+});
 
 new Vue({
   router,
