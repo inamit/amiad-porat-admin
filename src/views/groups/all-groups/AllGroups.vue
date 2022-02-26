@@ -65,10 +65,12 @@ import Component from "vue-class-component";
 import AddGroup from "../add-group/AddGroup.vue";
 import { mdiPencil, mdiDelete } from "@mdi/js";
 import Swal from "sweetalert2";
+import Group from "@/models/group";
+import { getAllGroups } from "@/DAL/group.dal";
 
 @Component({ name: "AllGroups", components: { AddGroup } })
 export default class AllGroups extends Vue {
-  groups: Record<string, unknown>[] = [];
+  groups: Group[] = [];
 
   loading = true;
 
@@ -89,20 +91,7 @@ export default class AllGroups extends Vue {
   async getGroups() {
     this.loading = true;
 
-    this.groups = [];
-    const groups = await getDocs(query(collection(getFirestore(), "groups")));
-
-    groups.forEach(async (group) => {
-      const teacher = await getDoc(
-        doc(getFirestore(), "users", group.get("teacher"))
-      );
-
-      this.groups.push({
-        id: group.id,
-        name: group.get("name"),
-        teacher: teacher.data(),
-      });
-    });
+    this.groups = await getAllGroups();
 
     this.loading = false;
   }
@@ -129,12 +118,10 @@ export default class AllGroups extends Vue {
 
   async close(value: any) {
     if (value instanceof Object) {
-      const teacher = await getDoc(doc(getFirestore(), "users", value.teacher));
-
       this.groups.push({
         id: value.id,
         name: value.name,
-        teacher: teacher.data(),
+        teacher: value.teacher,
       });
     }
 

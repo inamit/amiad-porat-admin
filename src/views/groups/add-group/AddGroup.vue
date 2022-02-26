@@ -16,7 +16,6 @@
         />
         <v-select
           :items="teachers"
-          item-value="uid"
           v-model="teacher"
           required
           label="מורה"
@@ -61,7 +60,7 @@ export default class AddUser extends Vue {
   teachers: User[] = [];
 
   name = "";
-  teacher = "";
+  teacher: User | undefined = undefined;
 
   rules = {
     nameRules: [(value: string) => Boolean(value) || "יש להכניס שם"],
@@ -85,7 +84,7 @@ export default class AddUser extends Vue {
       Swal.showLoading();
       const doc = await addDoc(collection(getFirestore(), "groups"), {
         name: this.name,
-        teacher: this.teacher,
+        teacher: this.teacher?.uid,
       });
       Swal.hideLoading();
       Swal.fire({ title: "השיעור נוסף", icon: "success" });
