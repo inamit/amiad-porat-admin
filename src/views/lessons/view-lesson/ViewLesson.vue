@@ -140,7 +140,7 @@ import {
   getUsersWithRoleAndExclude,
   getUsersWithRoleBiggerThan,
 } from "@/DAL/user.dal";
-import { addStudentsToLesson } from "@/DAL/lesson.dal";
+import { addStudentsToLesson, updateLesson } from "@/DAL/lesson.dal";
 import Swal from "sweetalert2";
 
 @Component({ name: "ViewLesson" })
@@ -268,7 +268,7 @@ export default class ViewLesson extends Vue {
       (tutor) => tutor.uid === this.selectedTutor
     )!;
 
-    //TODO: Change in firebase
+    updateLesson(this.selectedEvent.id, this.selectedEvent);
 
     this.editingEvent = false;
   }

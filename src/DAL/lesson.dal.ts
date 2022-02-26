@@ -7,6 +7,7 @@ import {
   getDocs,
   getFirestore,
   query,
+  setDoc,
   updateDoc,
   where,
 } from "firebase/firestore";
@@ -41,4 +42,15 @@ export const addStudentsToLesson = async (
   await updateDoc(lessonToAdd, { students: arrayUnion(...studentsToAdd) });
 
   return studentsToAdd;
+};
+
+export const updateLesson = async (
+  lessonId: string,
+  updates: Partial<Lesson>
+) => {
+  const lesson = doc(firestore, "lessons", lessonId).withConverter(
+    lessonConverter
+  );
+
+  await setDoc(lesson, updates);
 };
