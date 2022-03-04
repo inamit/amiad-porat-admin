@@ -2,21 +2,20 @@
   <v-row justify="center">
     <v-col> </v-col>
     <v-col cols="7">
-      <h1>יצירת קבוצה חדשה</h1>
+      <h1>יצירת שיעור חדש</h1>
       <br />
       <v-form v-model="valid" ref="form">
         <v-text-field
           v-model="name"
           :prepend-inner-icon="icons.mdiRenameBox"
-          label="שם הקבוצה"
+          label="שם השיעור"
           outlined
-          placeholder="שם הקבוצה"
+          placeholder="שם השיעור"
           :rules="rules.nameRules"
           required
         />
         <v-select
           :items="teachers"
-          item-value="uid"
           v-model="teacher"
           required
           label="מורה"
@@ -31,7 +30,7 @@
           </template>
         </v-select>
 
-        <v-btn color="primary" @click="addGroup"> צור קבוצה </v-btn>
+        <v-btn color="primary" @click="addGroup"> צור שיעור </v-btn>
       </v-form>
     </v-col>
     <v-col> </v-col>
@@ -47,21 +46,21 @@ import {
   getFirestore,
   addDoc,
   FirestoreError,
-  query,
-  where,
-  getDocs,
 } from "firebase/firestore";
 import Swal from "sweetalert2";
 import { Emit } from "vue-property-decorator";
+import UserRoles from "@/enums/userRoles";
+import { getUsersWithRoleBiggerThan } from "@/DAL/user.dal";
+import User from "@/models/user";
 
 @Component({ name: "AddUser" })
 export default class AddUser extends Vue {
   valid = true;
 
-  teachers: Record<string, unknown>[] = [];
+  teachers: User[] = [];
 
   name = "";
-  teacher = "";
+  teacher: User | undefined = undefined;
 
   rules = {
     nameRules: [(value: string) => Boolean(value) || "יש להכניס שם"],
@@ -73,15 +72,7 @@ export default class AddUser extends Vue {
   };
 
   async created() {
-    const teachersQuery = query(
-      collection(getFirestore(), "users"),
-      where("role", "==", "teacher")
-    );
-    const teachersDocs = await getDocs(teachersQuery);
-
-    teachersDocs.forEach((doc) =>
-      this.teachers.push({ uid: doc.id, ...doc.data() })
-    );
+    this.teachers = await getUsersWithRoleBiggerThan(UserRoles.TEACHER);
   }
 
   @Emit("add-group")
@@ -93,10 +84,10 @@ export default class AddUser extends Vue {
       Swal.showLoading();
       const doc = await addDoc(collection(getFirestore(), "groups"), {
         name: this.name,
-        teacher: this.teacher,
+        teacher: this.teacher?.uid,
       });
       Swal.hideLoading();
-      Swal.fire({ title: "הקבוצה נוספה", icon: "success" });
+      Swal.fire({ title: "השיעור נוסף", icon: "success" });
 
       return { id: doc.id, name: this.name, teacher: this.teacher };
     } catch (error: unknown) {
@@ -114,7 +105,7 @@ export default class AddUser extends Vue {
         }
 
         Swal.fire({
-          title: "לא היה ניתן להוסיף את הקבוצה",
+          title: "לא היה ניתן להוסיף את השיעור",
           text: message,
           icon: "error",
         });

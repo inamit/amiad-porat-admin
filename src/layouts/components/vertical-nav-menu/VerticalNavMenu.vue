@@ -33,7 +33,7 @@
         :to="{ name: 'dashboard' }"
         :icon="icons.mdiHomeOutline"
       />
-      <!-- <nav-menu-section-title title="פעולות חשבון" /> -->
+      <!-- <nav-menu-section-title title="פעולות משתמש" /> -->
       <nav-menu-section-title title="פעולות על משתמשים" />
       <nav-menu-link
         exact
@@ -42,13 +42,13 @@
         :icon="icons.mdiFilterVariant"
       />
       <nav-menu-link
-        title="הוספת חשבון"
+        title="הוספת משתמש"
         :to="{ name: 'addAccount' }"
         :icon="icons.mdiAccountPlusOutline"
       />
       <nav-menu-section-title title="ניהול" />
       <nav-menu-link
-        title="קבוצות"
+        title="שיעורים"
         :to="{ name: 'listGroups' }"
         :icon="icons.mdiAccountGroup"
       />

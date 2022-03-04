@@ -170,7 +170,7 @@ export default class ListUsers extends Vue {
         value: "grade",
       },
       {
-        text: "קבוצה",
+        text: "שיעור",
         value: "group",
       },
       {
