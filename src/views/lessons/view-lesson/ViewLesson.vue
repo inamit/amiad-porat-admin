@@ -110,8 +110,35 @@
               )"
               :key="student.student.uid"
             >
-              {{ student.student.firstName }}
-              {{ student.student.lastName }}
+              <v-menu
+                bottom
+                origin="center center"
+                transition="scale-transition"
+              >
+                <template v-slot:activator="{ on, attrs }">
+                  <div v-bind="attrs" v-on="on">
+                    {{ student.student.firstName }}
+                    {{ student.student.lastName }}
+                    <v-btn icon>
+                      <v-icon size="2vh">{{ icons.mdiChevronDown }}</v-icon>
+                    </v-btn>
+                  </div>
+                </template>
+                <v-list>
+                  <v-list-item-group>
+                    <v-list-item v-for="status in statuses" :key="status">
+                      <v-list-item-content>
+                        <v-list-item-title
+                          @click="
+                            changeStudentStatus(student.student.uid, status)
+                          "
+                          >{{ statusLabel(status) }}</v-list-item-title
+                        >
+                      </v-list-item-content>
+                    </v-list-item>
+                  </v-list-item-group>
+                </v-list>
+              </v-menu>
             </v-chip>
           </v-col>
         </v-chip-group>
@@ -137,7 +164,7 @@ import Lesson from "@/models/lesson";
 import StudentStatus from "@/enums/studentStatus";
 import User from "@/models/user";
 import UserRole from "@/enums/userRoles";
-import { mdiCheck, mdiDotsVertical, mdiPencil } from "@mdi/js";
+import { mdiCheck, mdiDotsVertical, mdiPencil, mdiChevronDown } from "@mdi/js";
 import Vue from "vue";
 import Component from "vue-class-component";
 import { Emit, Prop, Watch } from "vue-property-decorator";
@@ -192,6 +219,7 @@ export default class ViewLesson extends Vue {
     mdiPencil,
     mdiDotsVertical,
     mdiCheck,
+    mdiChevronDown,
   };
 
   created() {
@@ -302,6 +330,10 @@ export default class ViewLesson extends Vue {
         student.lastName.includes(searchValue)) &&
       !this.selectedEvent.isStudentInLesson(student.uid)
     );
+  }
+
+  changeStudentStatus(student: string, status: string) {
+    console.log(`Changing ${student} to ${status}`);
   }
 
   @Emit("close-lesson-view")
