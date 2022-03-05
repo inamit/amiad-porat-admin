@@ -130,7 +130,11 @@
                       <v-list-item-content>
                         <v-list-item-title
                           @click="
-                            changeStudentStatus(student.student.uid, status)
+                            changeStudentStatus(
+                              student.student.uid,
+                              student.status,
+                              status
+                            )
                           "
                           >{{ statusLabel(status) }}</v-list-item-title
                         >
@@ -173,7 +177,11 @@ import {
   getUsersWithRoleAndExclude,
   getUsersWithRoleBiggerThan,
 } from "@/DAL/user.dal";
-import { addStudentsToLesson, updateLesson } from "@/DAL/lesson.dal";
+import {
+  addStudentsToLesson,
+  updateLesson,
+  changeStudentStatus,
+} from "@/DAL/lesson.dal";
 import Swal from "sweetalert2";
 
 @Component({ name: "ViewLesson" })
@@ -332,8 +340,28 @@ export default class ViewLesson extends Vue {
     );
   }
 
-  changeStudentStatus(student: string, status: string) {
-    console.log(`Changing ${student} to ${status}`);
+  async changeStudentStatus(
+    student: string,
+    oldStatus: StudentStatus,
+    status: string
+  ) {
+    try {
+      await changeStudentStatus(
+        this.selectedEvent.id,
+        student,
+        oldStatus,
+        status
+      );
+      this.selectedEvent.students.find(
+        (studentToChange) => studentToChange.student?.uid === student
+      )!.status = StudentStatus[status as StudentStatus];
+    } catch (e) {
+      console.error(e);
+      Swal.fire({
+        icon: "error",
+        title: "לא ניתן היה לבצע את בקשתך",
+      });
+    }
   }
 
   @Emit("close-lesson-view")
