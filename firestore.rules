@@ -18,6 +18,7 @@ service cloud.firestore {
     
     match /lessons/{document=**} {
     	allow read: if request.auth != null;
+      allow write: if isAdmin();
     }
   }
 }

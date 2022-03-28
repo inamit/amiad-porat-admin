@@ -24,7 +24,7 @@
           <!-- Right Content -->
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
-              <v-btn icon small v-on="on" v-bind="attrs">
+              <v-btn icon small v-on="on" v-bind="attrs" @click="openBugReport">
                 <v-icon>
                   {{ icons.mdiBugOutline }}
                 </v-icon>
@@ -58,7 +58,7 @@ import VerticalNavMenu from "./components/vertical-nav-menu/VerticalNavMenu.vue"
 import ThemeSwitcher from "./components/ThemeSwitcher.vue";
 import AppBarUserMenu from "./components/AppBarUserMenu.vue";
 import { mdiMagnify, mdiBellOutline, mdiBugOutline } from "@mdi/js";
-import { ref } from "@vue/composition-api";
+import Gleap from "gleap";
 
 @Component({
   components: { VerticalNavMenu, ThemeSwitcher, AppBarUserMenu },
@@ -71,6 +71,10 @@ export default class Template extends Vue {
     mdiBellOutline,
     mdiBugOutline,
   };
+
+  openBugReport() {
+    Gleap.startFeedbackFlow("bugreporting");
+  }
 }
 </script>
 

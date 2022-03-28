@@ -15,8 +15,9 @@ import {
 } from "firebase/auth";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import Gleap from "gleap";
 
-// Vue.config.productionTip = false;
 Vue.prototype.$axios = axios;
 
 const firebaseConfig = {
@@ -28,24 +29,37 @@ const firebaseConfig = {
   appId: process.env.VUE_APP_FIREBASE_APP_ID,
   measurementId: process.env.VUE_APP_FIREBASE_MEASUREMENT_ID,
 };
-console.log(firebaseConfig);
-initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+
+const appCheck = initializeAppCheck(app, {
+  provider: new ReCaptchaV3Provider("6LcwFwMeAAAAABWgShvq1Sps2U8vmVkx39g7wzOa"),
+  isTokenAutoRefreshEnabled: true,
+});
 
 if (process.env.NODE_ENV === "development") {
+  console.log(firebaseConfig);
   console.log("testing locally -- hitting local auth and firestore emulators");
 
-  const functions = getFunctions(getApp());
+  const functions = getFunctions(app);
   connectFunctionsEmulator(functions, "localhost", 5001);
 
-  const auth = getAuth(getApp());
+  const auth = getAuth(app);
   connectAuthEmulator(auth, "http://localhost:9099");
 
-  const firestore = getFirestore(getApp());
+  const firestore = getFirestore(app);
   connectFirestoreEmulator(firestore, "localhost", 8082);
 }
 
 setPersistence(getAuth(), browserLocalPersistence);
 Vue.use(VueCookies);
+
+Gleap.initialize("BuFvw4c2u7py7vIjC0lo1ArvJTcEHVz8");
+Gleap.setLanguage("en");
+// Gleap.setLanguage("he");
+Gleap.setLiveSite(process.env.NODE_ENV !== "development");
+Gleap.attachCustomData({
+  app: "admin",
+});
 
 new Vue({
   router,

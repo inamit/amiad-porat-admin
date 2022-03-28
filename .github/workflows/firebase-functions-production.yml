@@ -1,0 +1,22 @@
+name: Deploy Firebase Functions to production
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'functions/**'
+jobs:
+  deploy_for_production:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: cd functions/ && npm install
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only functions
+        env:
+          PROJECT_ID: amiad-porat
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}

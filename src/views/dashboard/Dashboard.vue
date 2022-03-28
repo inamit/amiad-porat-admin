@@ -145,7 +145,7 @@ export default class Dashboard extends Vue {
     change: "-18%",
   };
 
-  created() {
+  created(): void {
     console.log(getAuth().currentUser);
   }
 }

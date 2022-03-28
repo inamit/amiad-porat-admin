@@ -20,6 +20,18 @@
             {{ $refs.calendar.title }}
           </v-toolbar-title>
           <v-spacer></v-spacer>
+          <v-dialog v-model="addLessonDialog" max-width="500px">
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn color="primary" dark class="ml-2" v-bind="attrs" v-on="on">
+                הוספת תגבור
+              </v-btn>
+            </template>
+            <v-card>
+              <v-card-text
+                ><add-lesson @add-lesson="close"></add-lesson
+              ></v-card-text>
+            </v-card>
+          </v-dialog>
           <v-menu bottom right>
             <template v-slot:activator="{ on, attrs }">
               <v-btn outlined color="grey darken-2" v-bind="attrs" v-on="on">
@@ -44,6 +56,7 @@
           v-model="focus"
           color="primary"
           :events="events"
+          event-overlap-mode="stack"
           :event-color="getEventColor"
           :event-timed="isTimed"
           :type="type"
@@ -60,65 +73,22 @@
               :style="{ top: nowY }"
             ></div>
           </template>
+          <template v-slot:event="{ event }">
+            <strong
+              >{{ event.tutor.firstName }} {{ event.tutor.lastName }}</strong
+            >
+            <br />
+            {{ event.start.getHours() }}-{{ event.end.getHours() }}
+            <br />
+          </template>
         </v-calendar>
-        <v-dialog v-model="selectedOpen" :activator="selectedElement">
-          <v-card color="grey lighten-4" flat>
-            <v-toolbar :color="selectedEvent.color" dark>
-              <v-btn icon>
-                <v-icon>{{ icons.mdiPencil }}</v-icon>
-              </v-btn>
-              <v-toolbar-title v-html="selectedEvent.name"></v-toolbar-title>
-              <v-spacer></v-spacer>
-              <v-btn icon>
-                <v-icon>{{ icons.mdiDotsVertical }}</v-icon>
-              </v-btn>
-            </v-toolbar>
-            <v-card-text>
-              <h1>
-                מתרגל: {{ selectedEvent.tutor.firstName }}
-                {{ selectedEvent.tutor.lastName }}
-              </h1>
-              <br />
-              <h1>תלמידים</h1>
-              <v-chip-group v-for="status in statuses" :key="status" column>
-                <v-col cols="2" align-self="center">
-                  <h2>{{ statusLabel(status) }}:</h2>
-                </v-col>
-                <v-col style="text-align: right">
-                  <v-chip
-                    v-for="student in selectedEvent.students.filter(
-                      (element) => element.status === status
-                    )"
-                    :key="student.student.uid"
-                  >
-                    {{ student.student.firstName }}
-                    {{ student.student.lastName }}
-                  </v-chip>
-                </v-col>
-              </v-chip-group>
-              <span v-html="selectedEvent.details"></span>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn text color="secondary" @click="selectedOpen = false">
-                Cancel
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+        <view-lesson
+          :selectedOpen="selectedOpen"
+          :selectedElement="selectedElement"
+          :selectedEvent="selectedEvent"
+          @close-lesson-view="closeLessonView"
+        ></view-lesson>
       </v-sheet>
-
-      <v-dialog v-model="addLessonDialog" max-width="500px">
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn color="primary" dark class="mb-2" v-bind="attrs" v-on="on">
-            הוספת תגבור
-          </v-btn>
-        </template>
-        <v-card>
-          <v-card-text
-            ><add-lesson @add-lesson="close"></add-lesson
-          ></v-card-text>
-        </v-card>
-      </v-dialog>
     </v-col>
   </v-row>
 </template>
@@ -132,22 +102,14 @@ import {
   mdiPencil,
   mdiDotsVertical,
   mdiMenuDown,
+  mdiCheck,
 } from "@mdi/js";
-import {
-  collection,
-  getDoc,
-  getDocs,
-  getFirestore,
-  query,
-  where,
-  doc,
-} from "@firebase/firestore";
 import Lesson from "@/models/lesson";
-import User from "@/models/user";
-import StudentStatus from "@/models/studentStatus";
 import AddLesson from "@/views/lessons/add-lesson/AddLesson.vue";
+import ViewLesson from "@/views/lessons/view-lesson/ViewLesson.vue";
+import { getAllLessonsBetween } from "@/DAL/lesson.dal";
 
-@Component({ name: "AllLessons", components: { AddLesson } })
+@Component({ name: "AllLessons", components: { AddLesson, ViewLesson } })
 export default class AllLessons extends Vue {
   icons = {
     mdiChevronRight,
@@ -155,22 +117,8 @@ export default class AllLessons extends Vue {
     mdiPencil,
     mdiDotsVertical,
     mdiMenuDown,
+    mdiCheck,
   };
-
-  statuses = Object.values(StudentStatus);
-
-  statusLabel(status) {
-    switch (status) {
-      case StudentStatus.Scheduled:
-        return "קבעו";
-      case StudentStatus.Canceled:
-        return "ביטלו";
-      case StudentStatus.Missed:
-        return "לא הגיעו";
-      case StudentStatus.Arrived:
-        return "הגיעו";
-    }
-  }
 
   focus = "";
   type = "week";
@@ -178,7 +126,7 @@ export default class AllLessons extends Vue {
     week: "שבועי",
     day: "יומי",
   };
-  selectedEvent = { tutor: { firstName: "", lastName: "" }, students: [] };
+  selectedEvent = Lesson.empty(); // { tutor: { firstName: "", lastName: "" }, students: [] };
   selectedElement = null;
   selectedOpen = false;
   events = [];
@@ -188,6 +136,10 @@ export default class AllLessons extends Vue {
   ready = false;
 
   addLessonDialog = false;
+
+  closeLessonView(value) {
+    this.selectedOpen = value;
+  }
 
   viewDay({ date }) {
     this.focus = date;
@@ -232,67 +184,12 @@ export default class AllLessons extends Vue {
   }
 
   async rangeChanged({ start, end }) {
-    const q = query(
-      collection(getFirestore(), "lessons"),
-      where("date", ">=", new Date(start.date)),
-      where("date", "<=", new Date(end.date))
-    );
+    const startDate = new Date(start.date);
+    const endDate = new Date(end.date);
+    endDate.setHours(23);
+    endDate.setMinutes(59);
 
-    const querySnapshot = await getDocs(q);
-    const lessons = [];
-
-    querySnapshot.forEach(async (lesson) => {
-      const tutor = await getDoc(
-        doc(getFirestore(), "users", lesson.get("tutor"))
-      );
-
-      let tutorObj = null;
-      if (tutor.exists()) {
-        tutorObj = new User(
-          tutor.id,
-          tutor.get("firstName"),
-          tutor.get("lastName")
-        );
-      }
-
-      const students = lesson.get("students");
-
-      const studentsObj = [];
-
-      for (const student of students) {
-        const studentFirestore = await getDoc(
-          doc(getFirestore(), "users", student.student)
-        );
-
-        if (studentFirestore.exists()) {
-          const studentObj = new User(
-            studentFirestore.get("uid"),
-            studentFirestore.get("firstName"),
-            studentFirestore.get("lastName")
-          );
-
-          const objToPush = {
-            student: studentObj,
-            status: StudentStatus.Scheduled,
-          };
-
-          studentsObj.push(objToPush);
-        }
-      }
-
-      const lessonObj = new Lesson(
-        lesson.id,
-        lesson.get("date").toDate(),
-        lesson.get("isOpen"),
-        tutorObj,
-        studentsObj,
-        lesson.get("subject")
-      );
-
-      lessons.push(lessonObj);
-    });
-
-    this.events = lessons;
+    this.events = await getAllLessonsBetween(startDate, endDate);
   }
 
   mounted() {
@@ -303,13 +200,7 @@ export default class AllLessons extends Vue {
 
   async close(value) {
     if (value instanceof Object) {
-      const teacher = await getDoc(doc(getFirestore(), "users", value.teacher));
-
-      this.groups.push({
-        id: value.id,
-        name: value.name,
-        teacher: teacher.data(),
-      });
+      this.events.push(value);
     }
 
     if (value !== false) {

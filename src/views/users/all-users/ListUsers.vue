@@ -95,7 +95,7 @@ export default class ListUsers extends Vue {
     { text: "מנהל", value: "admin" },
   ];
 
-  getRoleText(roleValue: string) {
+  getRoleText(roleValue: string): string | undefined {
     return this.roles.find((role) => role.value === roleValue)?.text;
   }
 
@@ -104,12 +104,17 @@ export default class ListUsers extends Vue {
 
   loading = true;
 
-  async created() {
+  async created(): Promise<void> {
     this.loading = true;
     const getUsers = httpsCallable(getFunctions(), "getAllUsers");
 
-    this.users = (await getUsers()).data as [];
-    this.loading = false;
+    try {
+      this.users = (await getUsers()).data as [];
+    } catch (e) {
+      console.log(e);
+    } finally {
+      this.loading = false;
+    }
   }
 
   filterUserRole(user: any) {
@@ -165,7 +170,7 @@ export default class ListUsers extends Vue {
         value: "grade",
       },
       {
-        text: "קבוצה",
+        text: "שיעור",
         value: "group",
       },
       {

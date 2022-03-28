@@ -33,12 +33,7 @@
         :to="{ name: 'dashboard' }"
         :icon="icons.mdiHomeOutline"
       />
-      <nav-menu-section-title title="פעולות חשבון" />
-      <nav-menu-link
-        title="Account Settings"
-        :to="{ name: 'pages-account-settings' }"
-        :icon="icons.mdiAccountCogOutline"
-      />
+      <!-- <nav-menu-section-title title="פעולות משתמש" /> -->
       <nav-menu-section-title title="פעולות על משתמשים" />
       <nav-menu-link
         exact
@@ -47,30 +42,13 @@
         :icon="icons.mdiFilterVariant"
       />
       <nav-menu-link
-        title="הוספת חשבון"
+        title="הוספת משתמש"
         :to="{ name: 'addAccount' }"
         :icon="icons.mdiAccountPlusOutline"
       />
-      <nav-menu-group title="Pages" :icon="icons.mdiFileOutline">
-        <nav-menu-link
-          title="Login"
-          :to="{ name: 'pages-login' }"
-          target="_blank"
-        />
-        <nav-menu-link
-          title="Register"
-          :to="{ name: 'pages-register' }"
-          target="_blank"
-        />
-        <nav-menu-link
-          title="Error"
-          :to="{ name: 'error-404' }"
-          target="_blank"
-        />
-      </nav-menu-group>
       <nav-menu-section-title title="ניהול" />
       <nav-menu-link
-        title="קבוצות"
+        title="שיעורים"
         :to="{ name: 'listGroups' }"
         :icon="icons.mdiAccountGroup"
       />
@@ -78,32 +56,6 @@
         title="תגבורים"
         :to="{ name: 'listLessons' }"
         :icon="icons.mdiGoogleClassroom"
-      />
-      <nav-menu-section-title title="USER INTERFACE" />
-      <nav-menu-link
-        title="Typography"
-        :to="{ name: 'typography' }"
-        :icon="icons.mdiAlphaTBoxOutline"
-      />
-      <nav-menu-link
-        title="Icons"
-        :to="{ name: 'icons' }"
-        :icon="icons.mdiEyeOutline"
-      />
-      <nav-menu-link
-        title="Cards"
-        :to="{ name: 'cards' }"
-        :icon="icons.mdiCreditCardOutline"
-      />
-      <nav-menu-link
-        title="Tables"
-        :to="{ name: 'simple-table' }"
-        :icon="icons.mdiTable"
-      />
-      <nav-menu-link
-        title="Form Layouts"
-        :to="{ name: 'form-layouts' }"
-        :icon="icons.mdiFormSelect"
       />
     </v-list>
   </v-navigation-drawer>

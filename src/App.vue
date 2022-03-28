@@ -27,6 +27,8 @@ export default class App extends Vue {
 }
 </script>
 <style>
+@import "~gleap/build/index.min.css";
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
