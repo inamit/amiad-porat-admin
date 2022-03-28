@@ -110,8 +110,39 @@
               )"
               :key="student.student.uid"
             >
-              {{ student.student.firstName }}
-              {{ student.student.lastName }}
+              <v-menu
+                bottom
+                origin="center center"
+                transition="scale-transition"
+              >
+                <template v-slot:activator="{ on, attrs }">
+                  <div v-bind="attrs" v-on="on">
+                    {{ student.student.firstName }}
+                    {{ student.student.lastName }}
+                    <v-btn icon>
+                      <v-icon size="2vh">{{ icons.mdiChevronDown }}</v-icon>
+                    </v-btn>
+                  </div>
+                </template>
+                <v-list>
+                  <v-list-item-group>
+                    <v-list-item v-for="status in statuses" :key="status">
+                      <v-list-item-content>
+                        <v-list-item-title
+                          @click="
+                            changeStudentStatus(
+                              student.student.uid,
+                              student.status,
+                              status
+                            )
+                          "
+                          >{{ statusLabel(status) }}</v-list-item-title
+                        >
+                      </v-list-item-content>
+                    </v-list-item>
+                  </v-list-item-group>
+                </v-list>
+              </v-menu>
             </v-chip>
           </v-col>
         </v-chip-group>
@@ -137,7 +168,7 @@ import Lesson from "@/models/lesson";
 import StudentStatus from "@/enums/studentStatus";
 import User from "@/models/user";
 import UserRole from "@/enums/userRoles";
-import { mdiCheck, mdiDotsVertical, mdiPencil } from "@mdi/js";
+import { mdiCheck, mdiDotsVertical, mdiPencil, mdiChevronDown } from "@mdi/js";
 import Vue from "vue";
 import Component from "vue-class-component";
 import { Emit, Prop, Watch } from "vue-property-decorator";
@@ -146,7 +177,11 @@ import {
   getUsersWithRoleAndExclude,
   getUsersWithRoleBiggerThan,
 } from "@/DAL/user.dal";
-import { addStudentsToLesson, updateLesson } from "@/DAL/lesson.dal";
+import {
+  addStudentsToLesson,
+  updateLesson,
+  changeStudentStatus,
+} from "@/DAL/lesson.dal";
 import Swal from "sweetalert2";
 
 @Component({ name: "ViewLesson" })
@@ -192,6 +227,7 @@ export default class ViewLesson extends Vue {
     mdiPencil,
     mdiDotsVertical,
     mdiCheck,
+    mdiChevronDown,
   };
 
   created() {
@@ -302,6 +338,30 @@ export default class ViewLesson extends Vue {
         student.lastName.includes(searchValue)) &&
       !this.selectedEvent.isStudentInLesson(student.uid)
     );
+  }
+
+  async changeStudentStatus(
+    student: string,
+    oldStatus: StudentStatus,
+    status: string
+  ) {
+    try {
+      await changeStudentStatus(
+        this.selectedEvent.id,
+        student,
+        oldStatus,
+        status
+      );
+      this.selectedEvent.students.find(
+        (studentToChange) => studentToChange.student?.uid === student
+      )!.status = StudentStatus[status as StudentStatus];
+    } catch (e) {
+      console.error(e);
+      Swal.fire({
+        icon: "error",
+        title: "לא ניתן היה לבצע את בקשתך",
+      });
+    }
   }
 
   @Emit("close-lesson-view")

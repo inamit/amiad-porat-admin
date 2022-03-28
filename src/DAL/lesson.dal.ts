@@ -1,6 +1,7 @@
 import StudentStatus from "@/enums/studentStatus";
 import Lesson, { lessonConverter } from "@/models/lesson";
 import {
+  arrayRemove,
   arrayUnion,
   collection,
   doc,
@@ -53,4 +54,23 @@ export const updateLesson = async (
   );
 
   await setDoc(lesson, updates);
+};
+
+export const changeStudentStatus = async (
+  lessonId: string,
+  studentId: string,
+  oldStatus: StudentStatus,
+  newStatus: string
+) => {
+  const lesson = doc(firestore, "lessons", lessonId).withConverter(
+    lessonConverter
+  );
+
+  await updateDoc(lesson, {
+    students: arrayRemove({ student: studentId, status: oldStatus }),
+  });
+
+  await updateDoc(lesson, {
+    students: arrayUnion({ student: studentId, status: newStatus }),
+  });
 };
