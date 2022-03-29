@@ -7,18 +7,38 @@ export default class Group {
   public id: string;
   public name: string;
   public teacher: User | undefined;
+  public subject: string;
+  public day: number;
+  public hour: string;
 
-  static initAndFetch(id: string, name: string, teacher: string) {
-    const group = new Group(id, name, undefined);
+  static initAndFetch(
+    id: string,
+    name: string,
+    teacher: string,
+    subject: string,
+    day: number,
+    hour: string
+  ) {
+    const group = new Group(id, name, undefined, subject, day, hour);
     Group.loadTeacher(group, teacher);
 
     return group;
   }
 
-  constructor(id: string, name: string, teacher: User | undefined) {
+  constructor(
+    id: string,
+    name: string,
+    teacher: User | undefined,
+    subject: string,
+    day: number,
+    hour: string
+  ) {
     this.id = id;
     this.name = name;
     this.teacher = teacher;
+    this.subject = subject;
+    this.day = day;
+    this.hour = hour;
   }
 
   private static async loadTeacher(group: Group, id: string) {
@@ -36,6 +56,13 @@ export const groupConverter: FirestoreDataConverter<Group> = {
   fromFirestore: (snapshot, options) => {
     const data = snapshot.data(options);
 
-    return Group.initAndFetch(snapshot.id, data.name, data.teacher);
+    return Group.initAndFetch(
+      snapshot.id,
+      data.name,
+      data.teacher,
+      data.subject,
+      data.dayInWeek,
+      data.hour
+    );
   },
 };
