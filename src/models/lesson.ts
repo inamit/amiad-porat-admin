@@ -82,14 +82,16 @@ export default class Lesson {
         students.map((value) => value.student)
       );
 
-      lesson.students = students.map((value) => {
-        return {
-          student: studentsMapped.find(
-            (student) => student.uid === value.student
-          ),
-          status: value.status,
-        };
-      });
+      lesson.students.push(
+        ...students.map((value) => {
+          return {
+            student: studentsMapped.find(
+              (student) => student.uid === value.student
+            ),
+            status: value.status,
+          };
+        })
+      );
     }
   }
 }

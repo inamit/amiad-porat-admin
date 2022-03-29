@@ -1,5 +1,8 @@
 <template>
   <v-row>
+    <v-col cols="12" md="4">
+      <unscheduled-students />
+    </v-col>
     <v-col cols="12">
       <dashboard-datatable />
     </v-col>
@@ -94,6 +97,7 @@ import DashboardDatatable from "./DashboardDatatable.vue";
 import Vue from "vue";
 import Component from "vue-class-component";
 import { getAuth } from "firebase/auth";
+import UnscheduledStudents from "./UnscheduledStudents.vue";
 
 @Component({
   components: {
@@ -105,6 +109,7 @@ import { getAuth } from "firebase/auth";
     DashboardCardSalesByCountries,
     DashboardWeeklyOverview,
     DashboardDatatable,
+    UnscheduledStudents,
   },
 })
 export default class Dashboard extends Vue {
