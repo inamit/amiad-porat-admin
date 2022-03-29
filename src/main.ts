@@ -16,7 +16,7 @@ import {
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
-import { getRemoteConfig } from "firebase/remote-config";
+import { fetchAndActivate, getRemoteConfig } from "firebase/remote-config";
 import Gleap from "gleap";
 
 Vue.prototype.$axios = axios;
@@ -43,6 +43,8 @@ remoteConfig.defaultConfig = {
   unscheduledStudentWhatsappMessage:
     "היי, מה קורה? שמתי לב שלא קבעת תגבור לשבוע הקרוב!",
 };
+
+fetchAndActivate(remoteConfig);
 
 if (process.env.NODE_ENV === "development") {
   console.log(firebaseConfig);
