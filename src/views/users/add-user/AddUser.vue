@@ -106,6 +106,47 @@
           :prepend-inner-icon="icons.mdiAccountCogOutline"
           :rules="rules.roleRules"
         ></v-select>
+
+        <v-select
+          v-if="role === UserRole.STUDENT"
+          :items="subjectsOptions"
+          v-model="subjects"
+          required
+          label="מקצועות"
+          outlined
+          multiple
+          :prepend-inner-icon="icons.mdiBookOpenBlankVariant"
+        >
+          <template v-slot:prepend-item>
+            <v-list-item ripple @mousedown.prevent @click="selectAllSubjects">
+              <v-list-item-action>
+                <v-icon :color="subjects.length > 0 ? 'indigo darken-4' : ''">
+                  {{ selectAllIcon() }}
+                </v-icon>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title> בחר הכל </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-divider class="mt-2"></v-divider>
+          </template>
+          <template v-slot:item="{ item }">
+            <v-list-item-action>
+              <v-icon>{{ getItemIcon(item) }}</v-icon>
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title>
+                {{ getHebrewSubject(item) }}
+              </v-list-item-title>
+            </v-list-item-content>
+          </template>
+          <template v-slot:selection="{ item }">
+            <v-chip close @click:close="removeSubject(item)">
+              <span>{{ getHebrewSubject(item) }}</span>
+            </v-chip>
+          </template>
+        </v-select>
+
         <v-select
           v-if="role === UserRole.STUDENT"
           :items="grades"
@@ -156,6 +197,12 @@ import {
   mdiAccountCogOutline,
   mdiCalendarRange,
   mdiGoogleClassroom,
+  mdiBookOpenBlankVariant,
+  mdiCloseBox,
+  mdiMinusBox,
+  mdiCheckboxBlankOutline,
+  mdiCheckboxMarked,
+  mdiClose,
 } from "@mdi/js";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { Watch } from "vue-property-decorator";
@@ -164,6 +211,7 @@ import Joi from "joi";
 import UserRole from "@/enums/userRoles";
 import { getAllGroups } from "@/DAL/group.dal";
 import Group from "@/models/group";
+import { Subject, getHebrewSubject } from "@/enums/subjects";
 
 @Component({ name: "AddUser" })
 export default class AddUser extends Vue {
@@ -177,8 +225,10 @@ export default class AddUser extends Vue {
   birthDate = "";
   grade = "";
   group = "";
+  subjects: string[] = [];
 
   UserRole: any = UserRole;
+  subjectsOptions: string[] = Object.values(Subject);
 
   get formattedBirthDate() {
     if (!this.birthDate) return null;
@@ -253,6 +303,36 @@ export default class AddUser extends Vue {
     ],
   };
 
+  selectedAllSubjects() {
+    return this.subjects.length === this.subjectsOptions.length;
+  }
+
+  selectAllIcon() {
+    if (this.selectedAllSubjects()) return mdiCheckboxMarked;
+    if (this.subjects.length > 0 && !this.selectedAllSubjects())
+      return mdiMinusBox;
+    return mdiCheckboxBlankOutline;
+  }
+
+  getItemIcon(value: string) {
+    return this.subjects.includes(value)
+      ? mdiCheckboxMarked
+      : mdiCheckboxBlankOutline;
+  }
+
+  removeSubject(value: string) {
+    this.subjects.splice(this.subjects.indexOf(value), 1);
+  }
+  selectAllSubjects() {
+    console.log(this.subjects.length);
+    console.log(this.subjectsOptions.length);
+    if (this.selectedAllSubjects()) {
+      this.subjects = [];
+    } else {
+      this.subjects = this.subjectsOptions;
+    }
+  }
+
   private roles = [
     { text: "תלמיד", value: UserRole.STUDENT },
     { text: "מתרגל", value: UserRole.TUTOR },
@@ -276,6 +356,10 @@ export default class AddUser extends Vue {
     this.groups = await getAllGroups();
   }
 
+  getHebrewSubject(subject: string) {
+    return getHebrewSubject(subject);
+  }
+
   created() {
     this.getGroups();
   }
@@ -291,6 +375,10 @@ export default class AddUser extends Vue {
     mdiAccountCogOutline,
     mdiCalendarRange,
     mdiGoogleClassroom,
+    mdiBookOpenBlankVariant,
+    mdiCheckboxBlankOutline,
+    mdiCheckboxMarked,
+    mdiClose,
   };
 
   async addUser() {
@@ -311,6 +399,7 @@ export default class AddUser extends Vue {
         birthDate: this.birthDate,
         grade: this.grade,
         group: this.group,
+        subjects: this.subjects,
       });
       Swal.hideLoading();
       Swal.fire({ icon: "success", title: "המשתמש נוסף בהצלחה!" });
