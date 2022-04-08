@@ -27,7 +27,32 @@ export const getAllLessonsBetween = async (
 
   const lessons = await getDocs(lessonsQuery.withConverter(lessonConverter));
 
-  return lessons.docs.map((lesson) => lesson.data());
+  const lessonsArr = lessons.docs.map((lesson) => lesson.data());
+
+  return lessonsArr;
+};
+
+export const getAllStudentsBetween = async (start: Date, end: Date) => {
+  const lessonsQuery = query(
+    collection(firestore, "lessons"),
+    where("date", ">=", start),
+    where("date", "<=", end)
+  );
+
+  const lessons = await getDocs(lessonsQuery);
+
+  const lessonsArr = [].concat(
+    ...lessons.docs.map((lesson) =>
+      lesson
+        .data()
+        .students.filter(
+          (student: any) => student.status === StudentStatus.Scheduled
+        )
+        .map((student: any) => student.student)
+    )
+  );
+
+  return lessonsArr;
 };
 
 export const addStudentsToLesson = async (
