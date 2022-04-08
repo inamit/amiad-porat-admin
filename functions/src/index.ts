@@ -35,6 +35,7 @@ export const createUser = functions.https.onCall(async (data, context) => {
       phoneNo: data.phoneNo,
       ...(data.grade && { grade: data.grade }),
       ...(data.group && { group: data.group }),
+      ...(data.subjects && { subjects: data.subjects }),
       role: data.role,
     };
 
