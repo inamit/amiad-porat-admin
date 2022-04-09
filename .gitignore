@@ -23,6 +23,7 @@ pnpm-debug.log*
 *.sw?
 
 # Firebase
+**/*-debug.log*
 **/.firebase
 **/firestore-debug.log
 **/firebase-debug.log
