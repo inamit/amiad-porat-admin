@@ -62,11 +62,25 @@
           <v-radio label="מתמטיקה" value="math"></v-radio>
           <v-radio label="אנגלית" value="english"></v-radio>
         </v-radio-group>
-        <v-autocomplete v-model="teacher" :items="teachers" clearable>
+        <v-select
+          v-model="tutor"
+          placeholder="מתרגל"
+          item-value="uid"
+          :items="tutors"
+        >
           <template v-slot:item="data">
             {{ data.item.firstName }} {{ data.item.lastName }}
           </template>
-        </v-autocomplete>
+          <template v-slot:selection="data">
+            {{ data.item.firstName }} {{ data.item.lastName }}
+          </template>
+        </v-select>
+        <v-text-field
+          type="number"
+          label="מספר מקסימלי של תלמידים"
+          v-model="maxStudents"
+        >
+        </v-text-field>
         <v-btn color="primary" @click="addLesson"> צור תגבור </v-btn>
       </v-form>
     </v-col>
@@ -89,21 +103,27 @@ import {
 } from "firebase/firestore";
 import Swal from "sweetalert2";
 import { Emit } from "vue-property-decorator";
+import UserRole from "@/enums/userRoles";
+import Lesson from "@/models/lesson";
+import User from "@/models/user";
+import { getUsersWithRoleBiggerThan } from "@/DAL/user.dal";
 
 @Component({ name: "AddLesson" })
 export default class AddLesson extends Vue {
   valid = true;
 
   timeMenu = false;
-  time = null;
+  time = "";
 
   dateMenu = false;
-  date = null;
+  date: string | null = null;
 
   subject = "math";
-  teacher = "";
+  tutor = "";
 
-  teachers: Record<string, unknown>[] = [];
+  maxStudents = 5;
+
+  tutors: User[] = [];
 
   rules = {
     timeRule: [(value: any) => Boolean(value) || "יש לבחור שעה"],
@@ -116,15 +136,7 @@ export default class AddLesson extends Vue {
   };
 
   async created() {
-    const teachersQuery = query(
-      collection(getFirestore(), "users"),
-      where("role", "==", "tutor")
-    );
-    const teachersDocs = await getDocs(teachersQuery);
-
-    teachersDocs.forEach((doc) =>
-      this.teachers.push({ uid: doc.id, ...doc.data() })
-    );
+    this.tutors = await getUsersWithRoleBiggerThan(UserRole.TUTOR);
   }
 
   @Emit("add-lesson")
@@ -134,18 +146,47 @@ export default class AddLesson extends Vue {
 
     try {
       Swal.showLoading();
-      //   const doc = await addDoc(collection(getFirestore(), "groups"), {
-      //     name: this.name,
-      //     teacher: this.teacher,
-      //   });
-      Swal.hideLoading();
-      Swal.fire({ title: "הקבוצה נוספה", icon: "success" });
+      const lessonDate = new Date(this.date!);
+      lessonDate.setHours(
+        parseInt(this.time.split(":")[0]),
+        parseInt(this.time.split(":")[1])
+      );
 
-      //   return { id: doc.id, name: this.name, teacher: this.teacher };
-    } catch (error: unknown) {
+      if (!(await this.isTutorAvailable(lessonDate))) {
+        throw new Error("המתרגל שנבחר לא פנוי בשעה שנבחרה");
+      }
+
+      const lessonData = {
+        date: lessonDate,
+        subject: this.subject,
+        tutor: this.tutor,
+        maxStudents: this.maxStudents,
+        students: [],
+        isOpen: false,
+      };
+      const doc = await addDoc(
+        collection(getFirestore(), "lessons"),
+        lessonData
+      );
+
       Swal.hideLoading();
+      Swal.fire({ title: "התגבור נוסף", icon: "success" });
+
+      const lessonObj = new Lesson(
+        doc.id,
+        lessonData.date,
+        lessonData.isOpen,
+        this.tutors.find((tutor) => tutor.uid === this.tutor)!,
+        lessonData.students,
+        lessonData.subject
+      );
+
+      return lessonObj;
+    } catch (error: any) {
+      console.log(error);
+      Swal.hideLoading();
+      let message = "";
       if (error instanceof FirestoreError) {
-        let message = "";
         switch (error.code) {
           case "permission-denied":
           case "unauthenticated":
@@ -155,16 +196,33 @@ export default class AddLesson extends Vue {
             message = "קרתה תקלה. פנה לתמיכה";
             break;
         }
-
-        Swal.fire({
-          title: "לא היה ניתן להוסיף את הקבוצה",
-          text: message,
-          icon: "error",
-        });
+      } else {
+        message = error.message;
       }
+
+      Swal.fire({
+        title: "לא היה ניתן להוסיף את התגבור",
+        text: message,
+        icon: "error",
+      });
     }
 
     return false;
+  }
+
+  private async isTutorAvailable(lessonDate: Date) {
+    const existingLessons = await getDocs(
+      query(
+        collection(getFirestore(), "lessons"),
+        where("date", "==", lessonDate)
+      )
+    );
+
+    return (
+      existingLessons.docs.filter(
+        (lesson) => lesson.get("tutor") === this.tutor
+      ).length === 0
+    );
   }
 }
 </script>

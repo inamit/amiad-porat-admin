@@ -90,8 +90,6 @@ import Lesson from "@/models/lesson";
 import { mdiSquareEditOutline, mdiDotsVertical, mdiArrowDown } from "@mdi/js";
 import Vue from "vue";
 import Component from "vue-class-component";
-import { Prop } from "vue-property-decorator";
-import data from "./datatable-data";
 
 @Component({})
 export default class DashboardDatatable extends Vue {
@@ -119,11 +117,11 @@ export default class DashboardDatatable extends Vue {
     missed: "לא הגיע/ה",
   };
 
-  async created() {
+  async created(): Promise<void> {
     this.isLoading = false;
   }
 
-  getColor(status: string) {
+  getColor(status: string): void {
     switch (status) {
       case "scheduled":
         break;
@@ -131,7 +129,7 @@ export default class DashboardDatatable extends Vue {
         break;
       case "arrived":
         break;
-      case "misswd":
+      case "missed":
         break;
       default:
         break;

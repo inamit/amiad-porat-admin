@@ -2,21 +2,20 @@
   <v-row justify="center">
     <v-col> </v-col>
     <v-col cols="7">
-      <h1>יצירת קבוצה חדשה</h1>
+      <h1>יצירת שיעור חדש</h1>
       <br />
       <v-form v-model="valid" ref="form">
         <v-text-field
           v-model="name"
           :prepend-inner-icon="icons.mdiRenameBox"
-          label="שם הקבוצה"
+          label="שם השיעור"
           outlined
-          placeholder="שם הקבוצה"
+          placeholder="שם השיעור"
           :rules="rules.nameRules"
           required
         />
         <v-select
           :items="teachers"
-          item-value="uid"
           v-model="teacher"
           required
           label="מורה"
@@ -30,8 +29,52 @@
             {{ data.item.firstName }} {{ data.item.lastName }}
           </template>
         </v-select>
+        <v-radio-group v-model="subject" row>
+          <v-radio label="מתמטיקה" value="math"></v-radio>
+          <v-radio label="אנגלית" value="english"></v-radio>
+        </v-radio-group>
+        <v-select
+          :items="days"
+          label="יום השיעור"
+          item-text="value"
+          item-value="key"
+          v-model="day"
+          outlined
+          required
+        >
+        </v-select>
+        <v-menu
+          ref="menu"
+          v-model="timeMenu"
+          :close-on-content-click="false"
+          :nudge-right="40"
+          :return-value.sync="time"
+          transition="scale-transition"
+          offset-y
+          max-width="290px"
+          min-width="290px"
+        >
+          <template v-slot:activator="{ on, attrs }">
+            <v-text-field
+              v-model="time"
+              label="שעת השיעור"
+              :prepend-inner-icon="icons.mdiClockTimeFourOutline"
+              readonly
+              v-bind="attrs"
+              v-on="on"
+              outlined
+            ></v-text-field>
+          </template>
+          <v-time-picker
+            v-if="timeMenu"
+            v-model="time"
+            full-width
+            format="24hr"
+            @click:minute="$refs.menu.save(time)"
+          ></v-time-picker>
+        </v-menu>
 
-        <v-btn color="primary" @click="addGroup"> צור קבוצה </v-btn>
+        <v-btn color="primary" @click="addGroup"> צור שיעור </v-btn>
       </v-form>
     </v-col>
     <v-col> </v-col>
@@ -41,27 +84,34 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { mdiAccountOutline, mdiRenameBox } from "@mdi/js";
+import {
+  mdiAccountOutline,
+  mdiRenameBox,
+  mdiClockTimeFourOutline,
+} from "@mdi/js";
 import {
   collection,
   getFirestore,
   addDoc,
   FirestoreError,
-  query,
-  where,
-  getDocs,
 } from "firebase/firestore";
 import Swal from "sweetalert2";
 import { Emit } from "vue-property-decorator";
+import UserRoles from "@/enums/userRoles";
+import { getUsersWithRoleBiggerThan } from "@/DAL/user.dal";
+import User from "@/models/user";
 
 @Component({ name: "AddUser" })
 export default class AddUser extends Vue {
   valid = true;
 
-  teachers: Record<string, unknown>[] = [];
+  teachers: User[] = [];
 
   name = "";
-  teacher = "";
+  teacher: User | undefined = undefined;
+  subject = "math";
+  day = 0;
+  time = "";
 
   rules = {
     nameRules: [(value: string) => Boolean(value) || "יש להכניס שם"],
@@ -70,18 +120,23 @@ export default class AddUser extends Vue {
   icons = {
     mdiAccountOutline,
     mdiRenameBox,
+    mdiClockTimeFourOutline,
   };
 
-  async created() {
-    const teachersQuery = query(
-      collection(getFirestore(), "users"),
-      where("role", "==", "teacher")
-    );
-    const teachersDocs = await getDocs(teachersQuery);
+  days = [
+    { key: 7, value: "ראשון" },
+    { key: 1, value: "שני" },
+    { key: 2, value: "שלישי" },
+    { key: 3, value: "רביעי" },
+    { key: 4, value: "חמישי" },
+    { key: 5, value: "שישי" },
+    { key: 6, value: "שבת" },
+  ];
 
-    teachersDocs.forEach((doc) =>
-      this.teachers.push({ uid: doc.id, ...doc.data() })
-    );
+  timeMenu = false;
+
+  async created() {
+    this.teachers = await getUsersWithRoleBiggerThan(UserRoles.TEACHER);
   }
 
   @Emit("add-group")
@@ -93,12 +148,22 @@ export default class AddUser extends Vue {
       Swal.showLoading();
       const doc = await addDoc(collection(getFirestore(), "groups"), {
         name: this.name,
-        teacher: this.teacher,
+        teacher: this.teacher?.uid,
+        subject: this.subject,
+        dayInWeek: this.day,
+        hour: this.time,
       });
       Swal.hideLoading();
-      Swal.fire({ title: "הקבוצה נוספה", icon: "success" });
+      Swal.fire({ title: "השיעור נוסף", icon: "success" });
 
-      return { id: doc.id, name: this.name, teacher: this.teacher };
+      return {
+        id: doc.id,
+        name: this.name,
+        teacher: this.teacher,
+        subject: this.subject,
+        dayInWeek: this.day,
+        hour: this.time,
+      };
     } catch (error: unknown) {
       Swal.hideLoading();
       if (error instanceof FirestoreError) {
@@ -114,7 +179,7 @@ export default class AddUser extends Vue {
         }
 
         Swal.fire({
-          title: "לא היה ניתן להוסיף את הקבוצה",
+          title: "לא היה ניתן להוסיף את השיעור",
           text: message,
           icon: "error",
         });

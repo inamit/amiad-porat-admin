@@ -9,13 +9,13 @@
   >
     <template v-slot:top>
       <v-toolbar flat>
-        <v-toolbar-title>קבוצות</v-toolbar-title>
+        <v-toolbar-title>שיעורים</v-toolbar-title>
         <v-divider class="mx-4" inset vertical></v-divider>
         <v-spacer></v-spacer>
         <v-dialog v-model="dialog" max-width="500px">
           <template v-slot:activator="{ on, attrs }">
             <v-btn color="primary" dark class="mb-2" v-bind="attrs" v-on="on">
-              הוספת קבוצה
+              הוספת שיעור
             </v-btn>
           </template>
           <v-card>
@@ -42,6 +42,30 @@
         >
       </div>
     </template>
+    <template #[`item.subject`]="{ item }">
+      <div class="d-flex flex-column">
+        <span
+          class="d-block font-weight-semibold text--primary text-truncate"
+          >{{ subjects[item.subject] }}</span
+        >
+      </div>
+    </template>
+    <template #[`item.day`]="{ item }">
+      <div class="d-flex flex-column">
+        <span
+          class="d-block font-weight-semibold text--primary text-truncate"
+          >{{ days[item.day] }}</span
+        >
+      </div>
+    </template>
+    <template #[`item.hour`]="{ item }">
+      <div class="d-flex flex-column">
+        <span
+          class="d-block font-weight-semibold text--primary text-truncate"
+          >{{ item.hour }}</span
+        >
+      </div>
+    </template>
     <template #[`item.actions`]="{ item }">
       <v-icon @click="deleteGroup(item)" color="rgba(255,0,0,1)">
         {{ icons.mdiDelete }}
@@ -65,18 +89,38 @@ import Component from "vue-class-component";
 import AddGroup from "../add-group/AddGroup.vue";
 import { mdiPencil, mdiDelete } from "@mdi/js";
 import Swal from "sweetalert2";
+import Group from "@/models/group";
+import { getAllGroups } from "@/DAL/group.dal";
 
 @Component({ name: "AllGroups", components: { AddGroup } })
 export default class AllGroups extends Vue {
-  groups: Record<string, unknown>[] = [];
+  groups: Group[] = [];
 
   loading = true;
 
   headers = [
-    { text: "שם הקבוצה", value: "name" },
+    { text: "שם השיעור", value: "name" },
     { text: "מורה", value: "teacher" },
+    { text: "מקצוע", value: "subject" },
+    { text: "יום", value: "day" },
+    { text: "שעה", value: "hour" },
     { text: "", value: "actions", align: "left" },
   ];
+
+  days = {
+    7: "ראשון",
+    1: "שני",
+    2: "שלישי",
+    3: "רביעי",
+    4: "חמישי",
+    5: "שישי",
+    6: "שבת",
+  };
+
+  subjects = {
+    math: "מתמטיקה",
+    english: "אנגלית",
+  };
 
   dialog = false;
 
@@ -89,20 +133,7 @@ export default class AllGroups extends Vue {
   async getGroups() {
     this.loading = true;
 
-    this.groups = [];
-    const groups = await getDocs(query(collection(getFirestore(), "groups")));
-
-    groups.forEach(async (group) => {
-      const teacher = await getDoc(
-        doc(getFirestore(), "users", group.get("teacher"))
-      );
-
-      this.groups.push({
-        id: group.id,
-        name: group.get("name"),
-        teacher: teacher.data(),
-      });
-    });
+    this.groups = await getAllGroups();
 
     this.loading = false;
   }
@@ -110,7 +141,7 @@ export default class AllGroups extends Vue {
   async deleteGroup(group: any) {
     const { isConfirmed } = await Swal.fire({
       icon: "warning",
-      title: "אתה בטוח שברצונך למחוק את הקבוצה הזאת?",
+      title: "אתה בטוח שברצונך למחוק את השיעור הזה?",
       confirmButtonText: "כן",
       cancelButtonText: "לא",
       showConfirmButton: true,
@@ -129,12 +160,13 @@ export default class AllGroups extends Vue {
 
   async close(value: any) {
     if (value instanceof Object) {
-      const teacher = await getDoc(doc(getFirestore(), "users", value.teacher));
-
       this.groups.push({
         id: value.id,
         name: value.name,
-        teacher: teacher.data(),
+        teacher: value.teacher,
+        subject: value.subject,
+        day: value.dayInWeek,
+        hour: value.hour,
       });
     }
 

@@ -6,6 +6,13 @@ import { DocumentSnapshot } from "firebase-functions/v1/firestore";
 initializeApp();
 
 export const createUser = functions.https.onCall(async (data, context) => {
+  if (context.app == undefined) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "The function must be called from an App Check verified app."
+    );
+  }
+
   if (!context.auth) {
     throw new functions.https.HttpsError(
       "unauthenticated",
@@ -28,6 +35,7 @@ export const createUser = functions.https.onCall(async (data, context) => {
       phoneNo: data.phoneNo,
       ...(data.grade && { grade: data.grade }),
       ...(data.group && { group: data.group }),
+      ...(data.subjects && { subjects: data.subjects }),
       role: data.role,
     };
 
@@ -43,7 +51,14 @@ export const createUser = functions.https.onCall(async (data, context) => {
 });
 
 export const getAllUsers = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
+  if (context.app == undefined) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "The function must be called from an App Check verified app."
+    );
+  }
+
+  if (!context.auth && context.auth!.token.role !== "admin") {
     throw new functions.https.HttpsError(
       "unauthenticated",
       "User cannot access this information"
@@ -91,6 +106,13 @@ export const getAllUsers = functions.https.onCall(async (data, context) => {
 });
 
 export const getUsersByRole = functions.https.onCall(async (data, context) => {
+  if (context.app == undefined) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "The function must be called from an App Check verified app."
+    );
+  }
+
   if (!context.auth && context.auth!.token.role !== "admin") {
     throw new functions.https.HttpsError(
       "unauthenticated",

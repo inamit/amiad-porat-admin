@@ -47,6 +47,7 @@
           type="tel"
           placeholder="מספר טלפון"
           required
+          gleap-ignore="value"
           :rules="rules.phoneRules"
         />
 
@@ -105,8 +106,49 @@
           :prepend-inner-icon="icons.mdiAccountCogOutline"
           :rules="rules.roleRules"
         ></v-select>
+
         <v-select
-          v-if="role === 'student'"
+          v-if="role === UserRole.STUDENT"
+          :items="subjectsOptions"
+          v-model="subjects"
+          required
+          label="מקצועות"
+          outlined
+          multiple
+          :prepend-inner-icon="icons.mdiBookOpenBlankVariant"
+        >
+          <template v-slot:prepend-item>
+            <v-list-item ripple @mousedown.prevent @click="selectAllSubjects">
+              <v-list-item-action>
+                <v-icon :color="subjects.length > 0 ? 'indigo darken-4' : ''">
+                  {{ selectAllIcon() }}
+                </v-icon>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title> בחר הכל </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-divider class="mt-2"></v-divider>
+          </template>
+          <template v-slot:item="{ item }">
+            <v-list-item-action>
+              <v-icon>{{ getItemIcon(item) }}</v-icon>
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title>
+                {{ getHebrewSubject(item) }}
+              </v-list-item-title>
+            </v-list-item-content>
+          </template>
+          <template v-slot:selection="{ item }">
+            <v-chip close @click:close="removeSubject(item)">
+              <span>{{ getHebrewSubject(item) }}</span>
+            </v-chip>
+          </template>
+        </v-select>
+
+        <v-select
+          v-if="role === UserRole.STUDENT"
           :items="grades"
           v-model="grade"
           required
@@ -116,12 +158,12 @@
         ></v-select>
 
         <v-select
-          v-if="role === 'student'"
+          v-if="role === UserRole.STUDENT"
           :items="groups"
           item-value="id"
           v-model="group"
           required
-          label="קבוצה"
+          label="שיעור"
           outlined
           :prepend-inner-icon="icons.mdiGoogleClassroom"
           :rules="rules.groupRules"
@@ -155,19 +197,21 @@ import {
   mdiAccountCogOutline,
   mdiCalendarRange,
   mdiGoogleClassroom,
+  mdiBookOpenBlankVariant,
+  mdiCloseBox,
+  mdiMinusBox,
+  mdiCheckboxBlankOutline,
+  mdiCheckboxMarked,
+  mdiClose,
 } from "@mdi/js";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { Watch } from "vue-property-decorator";
 import Swal from "sweetalert2";
 import Joi from "joi";
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  getFirestore,
-  query,
-} from "firebase/firestore";
+import UserRole from "@/enums/userRoles";
+import { getAllGroups } from "@/DAL/group.dal";
+import Group from "@/models/group";
+import { Subject, getHebrewSubject } from "@/enums/subjects";
 
 @Component({ name: "AddUser" })
 export default class AddUser extends Vue {
@@ -177,10 +221,14 @@ export default class AddUser extends Vue {
   email = "";
   phoneNo = "";
   password = "";
-  role = "";
+  role: number | undefined = undefined;
   birthDate = "";
   grade = "";
   group = "";
+  subjects: string[] = [];
+
+  UserRole: any = UserRole;
+  subjectsOptions: string[] = Object.values(Subject);
 
   get formattedBirthDate() {
     if (!this.birthDate) return null;
@@ -234,9 +282,9 @@ export default class AddUser extends Vue {
     ],
     roleRules: [
       (value: string) =>
-        Joi.string()
+        Joi.number()
           .required()
-          .messages({ "string.empty": "יש לבחור את סוג המשתמש" })
+          .messages({ "any.required": "יש לבחור את סוג המשתמש" })
           .validate(value).error?.message,
     ],
     gradeRules: [
@@ -250,16 +298,46 @@ export default class AddUser extends Vue {
       (value: string) =>
         Joi.string()
           .required()
-          .messages({ "string.empty": "יש לבחור קבוצה" })
+          .messages({ "string.empty": "יש לבחור שיעור" })
           .validate(value).error?.message,
     ],
   };
 
+  selectedAllSubjects() {
+    return this.subjects.length === this.subjectsOptions.length;
+  }
+
+  selectAllIcon() {
+    if (this.selectedAllSubjects()) return mdiCheckboxMarked;
+    if (this.subjects.length > 0 && !this.selectedAllSubjects())
+      return mdiMinusBox;
+    return mdiCheckboxBlankOutline;
+  }
+
+  getItemIcon(value: string) {
+    return this.subjects.includes(value)
+      ? mdiCheckboxMarked
+      : mdiCheckboxBlankOutline;
+  }
+
+  removeSubject(value: string) {
+    this.subjects.splice(this.subjects.indexOf(value), 1);
+  }
+  selectAllSubjects() {
+    console.log(this.subjects.length);
+    console.log(this.subjectsOptions.length);
+    if (this.selectedAllSubjects()) {
+      this.subjects = [];
+    } else {
+      this.subjects = this.subjectsOptions;
+    }
+  }
+
   private roles = [
-    { text: "תלמיד", value: "student" },
-    { text: "מתרגל", value: "tutor" },
-    { text: "מורה", value: "teacher" },
-    { text: "מנהל", value: "admin" },
+    { text: "תלמיד", value: UserRole.STUDENT },
+    { text: "מתרגל", value: UserRole.TUTOR },
+    { text: "מורה", value: UserRole.TEACHER },
+    { text: "מנהל", value: UserRole.ADMIN },
   ];
   private grades = [
     { text: "ז", value: 7 },
@@ -270,23 +348,16 @@ export default class AddUser extends Vue {
     { text: "יב", value: 12 },
   ];
 
-  private groups: Record<string, unknown>[] = [];
+  private groups: Group[] = [];
 
   async getGroups() {
     this.groups = [];
-    const groups = await getDocs(query(collection(getFirestore(), "groups")));
 
-    groups.forEach(async (group) => {
-      const teacher = await getDoc(
-        doc(getFirestore(), "users", group.get("teacher"))
-      );
+    this.groups = await getAllGroups();
+  }
 
-      this.groups.push({
-        id: group.id,
-        name: group.get("name"),
-        teacher: teacher.data(),
-      });
-    });
+  getHebrewSubject(subject: string) {
+    return getHebrewSubject(subject);
   }
 
   created() {
@@ -304,6 +375,10 @@ export default class AddUser extends Vue {
     mdiAccountCogOutline,
     mdiCalendarRange,
     mdiGoogleClassroom,
+    mdiBookOpenBlankVariant,
+    mdiCheckboxBlankOutline,
+    mdiCheckboxMarked,
+    mdiClose,
   };
 
   async addUser() {
@@ -324,10 +399,12 @@ export default class AddUser extends Vue {
         birthDate: this.birthDate,
         grade: this.grade,
         group: this.group,
+        subjects: this.subjects,
       });
       Swal.hideLoading();
       Swal.fire({ icon: "success", title: "המשתמש נוסף בהצלחה!" });
     } catch (error: any) {
+      console.log(error);
       Swal.hideLoading();
       Swal.fire({
         icon: "error",
