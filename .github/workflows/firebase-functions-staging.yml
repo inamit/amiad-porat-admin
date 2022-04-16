@@ -2,9 +2,9 @@ name: Deploy Firebase Functions to staging
 on:
   push:
     branches:
-      - 'staging'
+      - "staging"
     paths:
-      - 'functions/**'
+      - "functions/**"
 jobs:
   deploy_for_staging:
     runs-on: ubuntu-latest
@@ -12,7 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
-        run: cd functions/ && npm install
+        run: cd functions/ && npm ci
+      - name: Build functions
+        run: cd functions/ && npm run build
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:

@@ -16,6 +16,7 @@ import {
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import { fetchAndActivate, getRemoteConfig } from "firebase/remote-config";
 import Gleap from "gleap";
 
 Vue.prototype.$axios = axios;
@@ -36,6 +37,15 @@ const appCheck = initializeAppCheck(app, {
   isTokenAutoRefreshEnabled: true,
 });
 
+const remoteConfig = getRemoteConfig(app);
+
+remoteConfig.defaultConfig = {
+  unscheduledStudentWhatsappMessage:
+    "היי, מה קורה? שמתי לב שלא קבעת תגבור לשבוע הקרוב!",
+};
+
+fetchAndActivate(remoteConfig);
+
 if (process.env.NODE_ENV === "development") {
   console.log(firebaseConfig);
   console.log("testing locally -- hitting local auth and firestore emulators");
@@ -53,13 +63,13 @@ if (process.env.NODE_ENV === "development") {
 setPersistence(getAuth(), browserLocalPersistence);
 Vue.use(VueCookies);
 
-Gleap.initialize("BuFvw4c2u7py7vIjC0lo1ArvJTcEHVz8");
-Gleap.setLanguage("en");
-// Gleap.setLanguage("he");
-Gleap.setLiveSite(process.env.NODE_ENV !== "development");
-Gleap.attachCustomData({
-  app: "admin",
-});
+// Gleap.initialize("BuFvw4c2u7py7vIjC0lo1ArvJTcEHVz8");
+// Gleap.setLanguage("en");
+// // Gleap.setLanguage("he");
+// Gleap.setLiveSite(process.env.NODE_ENV !== "development");
+// Gleap.attachCustomData({
+//   app: "admin",
+// });
 
 new Vue({
   router,

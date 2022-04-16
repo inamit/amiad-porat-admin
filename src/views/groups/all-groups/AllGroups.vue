@@ -42,6 +42,30 @@
         >
       </div>
     </template>
+    <template #[`item.subject`]="{ item }">
+      <div class="d-flex flex-column">
+        <span
+          class="d-block font-weight-semibold text--primary text-truncate"
+          >{{ subjects[item.subject] }}</span
+        >
+      </div>
+    </template>
+    <template #[`item.day`]="{ item }">
+      <div class="d-flex flex-column">
+        <span
+          class="d-block font-weight-semibold text--primary text-truncate"
+          >{{ days[item.day] }}</span
+        >
+      </div>
+    </template>
+    <template #[`item.hour`]="{ item }">
+      <div class="d-flex flex-column">
+        <span
+          class="d-block font-weight-semibold text--primary text-truncate"
+          >{{ item.hour }}</span
+        >
+      </div>
+    </template>
     <template #[`item.actions`]="{ item }">
       <v-icon @click="deleteGroup(item)" color="rgba(255,0,0,1)">
         {{ icons.mdiDelete }}
@@ -77,8 +101,26 @@ export default class AllGroups extends Vue {
   headers = [
     { text: "שם השיעור", value: "name" },
     { text: "מורה", value: "teacher" },
+    { text: "מקצוע", value: "subject" },
+    { text: "יום", value: "day" },
+    { text: "שעה", value: "hour" },
     { text: "", value: "actions", align: "left" },
   ];
+
+  days = {
+    7: "ראשון",
+    1: "שני",
+    2: "שלישי",
+    3: "רביעי",
+    4: "חמישי",
+    5: "שישי",
+    6: "שבת",
+  };
+
+  subjects = {
+    math: "מתמטיקה",
+    english: "אנגלית",
+  };
 
   dialog = false;
 
@@ -122,6 +164,9 @@ export default class AllGroups extends Vue {
         id: value.id,
         name: value.name,
         teacher: value.teacher,
+        subject: value.subject,
+        day: value.dayInWeek,
+        hour: value.hour,
       });
     }
 
