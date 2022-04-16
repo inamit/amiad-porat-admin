@@ -78,8 +78,6 @@ export const updateLesson = async (
     lessonConverter
   );
 
-  console.log(updates.toFirestoreObject!());
-
   await updateDoc(lesson, updates.toFirestoreObject!());
 };
 
