@@ -75,6 +75,19 @@
             {{ data.item.firstName }} {{ data.item.lastName }}
           </template>
         </v-select>
+        <v-select
+          v-model="room"
+          placeholder="חדר"
+          item-value="id"
+          :items="rooms"
+        >
+          <template v-slot:item="data">
+            {{ data.item.name }}
+          </template>
+          <template v-slot:selection="data">
+            {{ data.item.name }}
+          </template>
+        </v-select>
         <v-text-field
           type="number"
           label="מספר מקסימלי של תלמידים"
@@ -106,7 +119,9 @@ import { Emit } from "vue-property-decorator";
 import UserRole from "@/enums/userRoles";
 import Lesson from "@/models/lesson";
 import User from "@/models/user";
+import Room from "@/models/room";
 import { getUsersWithRoleBiggerThan } from "@/DAL/user.dal";
+import { getAllRooms } from "@/DAL/room.dal";
 
 @Component({ name: "AddLesson" })
 export default class AddLesson extends Vue {
@@ -120,10 +135,12 @@ export default class AddLesson extends Vue {
 
   subject = "math";
   tutor = "";
+  room = "";
 
   maxStudents = 5;
 
   tutors: User[] = [];
+  rooms: Room[] = [];
 
   rules = {
     timeRule: [(value: any) => Boolean(value) || "יש לבחור שעה"],
@@ -137,6 +154,7 @@ export default class AddLesson extends Vue {
 
   async created() {
     this.tutors = await getUsersWithRoleBiggerThan(UserRole.TUTOR);
+    this.rooms = await getAllRooms();
   }
 
   @Emit("add-lesson")
@@ -156,6 +174,10 @@ export default class AddLesson extends Vue {
         throw new Error("המתרגל שנבחר לא פנוי בשעה שנבחרה");
       }
 
+      if (!(await this.isRoomAvailable(lessonDate))) {
+        throw new Error("החדר שנבחר תפוס בשעה שנבחרה");
+      }
+
       const lessonData = {
         date: lessonDate,
         subject: this.subject,
@@ -163,6 +185,7 @@ export default class AddLesson extends Vue {
         maxStudents: this.maxStudents,
         students: [],
         isOpen: false,
+        room: this.room,
       };
       const doc = await addDoc(
         collection(getFirestore(), "lessons"),
@@ -178,7 +201,8 @@ export default class AddLesson extends Vue {
         lessonData.isOpen,
         this.tutors.find((tutor) => tutor.uid === this.tutor)!,
         lessonData.students,
-        lessonData.subject
+        lessonData.subject,
+        this.rooms.find((room) => room.id === this.room)
       );
 
       return lessonObj;
@@ -208,6 +232,20 @@ export default class AddLesson extends Vue {
     }
 
     return false;
+  }
+
+  private async isRoomAvailable(lessonDate: Date) {
+    const existingLessons = await getDocs(
+      query(
+        collection(getFirestore(), "lessons"),
+        where("date", "==", lessonDate)
+      )
+    );
+
+    return (
+      existingLessons.docs.filter((lesson) => lesson.get("room") === this.room)
+        .length === 0
+    );
   }
 
   private async isTutorAvailable(lessonDate: Date) {

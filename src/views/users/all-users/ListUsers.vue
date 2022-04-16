@@ -66,8 +66,8 @@
         >
       </v-tooltip>
     </template>
-    <template v-slot:[`item.customClaims.role`]="{ item }">
-      {{ getRoleText(item.customClaims.role) }}
+    <template v-slot:[`item.role`]="{ item }">
+      {{ getRoleText(item.role) }}
     </template>
   </v-data-table>
 </template>
@@ -77,6 +77,7 @@ import Vue from "vue";
 import Component from "vue-class-component";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { mdiFilter, mdiMagnify } from "@mdi/js";
+import UserRole from "@/enums/userRoles";
 
 @Component({ name: "ListUsers" })
 export default class ListUsers extends Vue {
@@ -89,13 +90,13 @@ export default class ListUsers extends Vue {
   };
 
   roles = [
-    { text: "תלמיד", value: "student" },
-    { text: "מתרגל", value: "tutor" },
-    { text: "מורה", value: "teacher" },
-    { text: "מנהל", value: "admin" },
+    { text: "תלמיד", value: UserRole.STUDENT },
+    { text: "מתרגל", value: UserRole.TUTOR },
+    { text: "מורה", value: UserRole.TEACHER },
+    { text: "מנהל", value: UserRole.ADMIN },
   ];
 
-  getRoleText(roleValue: string): string | undefined {
+  getRoleText(roleValue: number): string | undefined {
     return this.roles.find((role) => role.value === roleValue)?.text;
   }
 
@@ -175,7 +176,7 @@ export default class ListUsers extends Vue {
       },
       {
         text: "סוג משתמש",
-        value: "customClaims.role",
+        value: "role",
       },
     ];
   }

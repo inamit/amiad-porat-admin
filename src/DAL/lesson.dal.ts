@@ -78,7 +78,7 @@ export const updateLesson = async (
     lessonConverter
   );
 
-  await setDoc(lesson, updates);
+  await updateDoc(lesson, updates.toFirestoreObject!());
 };
 
 export const changeStudentStatus = async (

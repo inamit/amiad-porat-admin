@@ -5,7 +5,10 @@ service cloud.firestore {
     	return request.auth != null && request.auth.token.role == 'admin';
     }
     
-    
+    match /rooms/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
     match /users {
     	allow write: if isAdmin();
       match /{userId} {

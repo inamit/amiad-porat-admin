@@ -1,9 +1,24 @@
 import * as functions from "firebase-functions";
-import { auth, firestore, initializeApp } from "firebase-admin";
+import * as admin from "firebase-admin";
 import { HttpsError } from "firebase-functions/lib/providers/https";
 import { DocumentSnapshot } from "firebase-functions/v1/firestore";
 
-initializeApp();
+admin.initializeApp();
+
+enum UserRole {
+  STUDENT = 1,
+  TUTOR = 2,
+  TEACHER = 3,
+  ADMIN = 4,
+}
+
+const isUserRoleAbove = async (uid: string, requestedRole: UserRole) => {
+  const user = await admin.firestore().collection("users").doc(uid).get();
+
+  const role = user.get("role");
+
+  return user.exists && role ? role >= requestedRole : false;
+};
 
 export const createUser = functions.https.onCall(async (data, context) => {
   if (context.app == undefined) {
@@ -20,13 +35,20 @@ export const createUser = functions.https.onCall(async (data, context) => {
     );
   }
 
+  if (!isUserRoleAbove(context.auth.uid, UserRole.ADMIN)) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "User cannot access this information"
+    );
+  }
+
   try {
-    const { uid } = await auth().createUser({
+    const { uid } = await admin.auth().createUser({
       email: data.email,
       password: data.password,
     });
 
-    await auth().setCustomUserClaims(uid, { role: data.role });
+    await admin.auth().setCustomUserClaims(uid, { role: data.role });
 
     const info = {
       firstName: data.firstName,
@@ -39,7 +61,7 @@ export const createUser = functions.https.onCall(async (data, context) => {
       role: data.role,
     };
 
-    await firestore().collection("users").doc(uid).set(info);
+    await admin.firestore().collection("users").doc(uid).set(info);
   } catch (error) {
     switch (error.code) {
       case "auth/email-already-exists":
@@ -58,18 +80,26 @@ export const getAllUsers = functions.https.onCall(async (data, context) => {
     );
   }
 
-  if (!context.auth && context.auth!.token.role !== "admin") {
+  if (!context.auth) {
     throw new functions.https.HttpsError(
       "unauthenticated",
       "User cannot access this information"
     );
   }
 
-  const { users } = await auth().listUsers();
+  if (!isUserRoleAbove(context.auth.uid, UserRole.ADMIN)) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "User cannot access this information"
+    );
+  }
+
+  const { users } = await admin.auth().listUsers();
 
   return await Promise.all(
     users.map(async ({ uid, email, metadata, customClaims, phoneNumber }) => {
-      const userInfo: DocumentSnapshot = await firestore()
+      const userInfo: DocumentSnapshot = await admin
+        .firestore()
         .collection("users")
         .doc(uid)
         .get();
@@ -85,10 +115,11 @@ export const getAllUsers = functions.https.onCall(async (data, context) => {
 
       if (response.group) {
         const group = (
-          await firestore().collection("groups").doc(response.group).get()
+          await admin.firestore().collection("groups").doc(response.group).get()
         ).data()!;
 
-        const teacher = await firestore()
+        const teacher = await admin
+          .firestore()
           .collection("users")
           .doc(group?.teacher)
           .get();
@@ -113,14 +144,22 @@ export const getUsersByRole = functions.https.onCall(async (data, context) => {
     );
   }
 
-  if (!context.auth && context.auth!.token.role !== "admin") {
+  if (!context.auth) {
     throw new functions.https.HttpsError(
       "unauthenticated",
       "User cannot access this information"
     );
   }
 
-  const docs = await firestore()
+  if (!isUserRoleAbove(context.auth.uid, UserRole.ADMIN)) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "User cannot access this information"
+    );
+  }
+
+  const docs = await admin
+    .firestore()
     .collection("users")
     .where("role", "==", data.role)
     .get();
