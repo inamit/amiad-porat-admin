@@ -18,7 +18,10 @@
         type="table-thead, table-row-divider@8"
       ></v-skeleton-loader>
 
-      <v-simple-table id="lessonsByRoom" v-else>
+      <v-simple-table
+        id="lessonsByRoom"
+        v-if="!isLoading && lessons && lessons.length > 0"
+      >
         <template v-slot:default>
           <thead>
             <tr>
@@ -123,13 +126,14 @@
           </tbody>
         </template>
       </v-simple-table>
+
+      <h1 v-else>אין היום תגבורים</h1>
     </v-card-text>
   </v-card>
 </template>
 
 <script lang="ts">
 import { changeStudentStatus, getAllLessonsBetween } from "@/DAL/lesson.dal";
-import User from "@/models/user";
 import {
   mdiChevronDown,
   mdiChevronUp,
