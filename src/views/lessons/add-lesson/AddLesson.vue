@@ -155,7 +155,6 @@ export default class AddLesson extends Vue {
   async created() {
     this.tutors = await getUsersWithRoleBiggerThan(UserRole.TUTOR);
     this.rooms = await getAllRooms();
-    console.log(this.rooms);
   }
 
   @Emit("add-lesson")
