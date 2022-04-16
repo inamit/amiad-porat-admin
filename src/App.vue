@@ -3,6 +3,18 @@
     <component :is="resolveLayout">
       <router-view />
     </component>
+
+    <div class="text-center ma-2" dir="rtl">
+      <v-snackbar v-model="newVersionSnackBar" :timeout="-1">
+        יש גרסה חדשה. בכדי לראות אותה יש לרענן את הדף.
+
+        <template v-slot:action="{ attrs }">
+          <v-btn icon v-bind="attrs" @click="refreshPage">
+            <v-icon color="pink">{{ icons.mdiRefresh }}</v-icon>
+          </v-btn>
+        </template>
+      </v-snackbar>
+    </div>
   </div>
 </template>
 
@@ -11,10 +23,14 @@ import Vue from "vue";
 import Component from "vue-class-component";
 import LayoutContent from "./layouts/ContentTemplate.vue";
 import LayoutBlank from "./layouts/BlankTemplate.vue";
-import { useRouter } from "@/utils";
+import { mdiRefresh } from "@mdi/js";
 
 @Component({ components: { LayoutContent, LayoutBlank } })
 export default class App extends Vue {
+  newVersionSnackBar = false;
+
+  icons = { mdiRefresh };
+
   get resolveLayout() {
     const route = this.$route;
 
@@ -23,6 +39,20 @@ export default class App extends Vue {
     if (route.meta!.layout === "blank") return "layout-blank";
 
     return "layout-content";
+  }
+
+  created() {
+    window.addEventListener("has-new-version", (event) => {
+      this.setNewVersionSnackBar(true);
+    });
+  }
+
+  setNewVersionSnackBar(isOpen: boolean) {
+    this.newVersionSnackBar = isOpen;
+  }
+
+  refreshPage() {
+    document.location.reload();
   }
 }
 </script>
