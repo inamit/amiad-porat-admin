@@ -19,7 +19,7 @@
         </v-btn>
       </v-toolbar>
       <v-card-text style="display: flex; flex-direction: column">
-        <h1 style="align-self: center">
+        <h1 style="align-self: center; text-align: right">
           <table>
             <tr>
               <td><span class="ml-2">מתרגל:</span></td>
@@ -43,6 +43,27 @@
                 </v-select>
               </td>
             </tr>
+            <tr>
+              <td><span class="ml-2">חדר:</span></td>
+              <td v-if="!editingEvent">
+                {{ updatedEvent.room.name }}
+              </td>
+              <td v-if="editingEvent">
+                <v-select
+                  v-model="selectedRoom"
+                  item-value="id"
+                  :items="rooms"
+                  :loading="isLoadingRooms"
+                >
+                  <template v-slot:item="data">
+                    {{ data.item.name }}
+                  </template>
+                  <template v-slot:selection="data">
+                    {{ data.item.name }}
+                  </template>
+                </v-select>
+              </td>
+            </tr>
           </table>
         </h1>
         <v-switch
@@ -54,6 +75,7 @@
           :color="updatedEvent.color"
         >
         </v-switch>
+
         <h1>תלמידים: {{ updatedEvent.students.length }}</h1>
         <v-autocomplete
           chips
@@ -183,6 +205,8 @@ import {
   changeStudentStatus,
 } from "@/DAL/lesson.dal";
 import Swal from "sweetalert2";
+import Room from "@/models/room";
+import { getAllRooms } from "@/DAL/room.dal";
 
 @Component({ name: "ViewLesson" })
 export default class ViewLesson extends Vue {
@@ -198,15 +222,18 @@ export default class ViewLesson extends Vue {
   updatedEvent: Lesson = Lesson.empty();
   editingEvent = false;
   tutors: User[] = [];
+  rooms: Room[] = [];
   students: User[] = [];
   studentsToAdd: string[] = [];
 
   isLoadingTutors = true;
+  isLoadingRooms = true;
   isLoadingStudents = true;
 
   isAddingStudents = false;
 
   selectedTutor = this.selectedEvent.tutor?.uid;
+  selectedRoom = this.selectedEvent.room?.id;
 
   statuses = Object.values(StudentStatus);
 
@@ -232,6 +259,15 @@ export default class ViewLesson extends Vue {
 
   created() {
     this.getTutors();
+    this.getRooms();
+  }
+
+  async getRooms() {
+    this.isLoadingRooms = true;
+
+    this.rooms = await getAllRooms();
+
+    this.isLoadingRooms = false;
   }
 
   async getTutors() {
@@ -315,6 +351,9 @@ export default class ViewLesson extends Vue {
     this.updatedEvent.tutor = this.tutors.find(
       (tutor) => tutor.uid === this.selectedTutor
     )!;
+    this.updatedEvent.room = this.rooms.find(
+      (room) => room.id === this.selectedRoom
+    );
 
     try {
       updateLesson(this.selectedEvent.id, this.updatedEvent);
@@ -383,6 +422,7 @@ export default class ViewLesson extends Vue {
   @Watch("selectedEvent")
   onSelectedEventChanged(value: Lesson) {
     this.selectedTutor = value.tutor?.uid;
+    this.selectedRoom = value.room?.id;
   }
 }
 </script>
