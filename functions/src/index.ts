@@ -5,6 +5,21 @@ import { DocumentSnapshot } from "firebase-functions/v1/firestore";
 
 initializeApp();
 
+enum UserRole {
+  STUDENT = 1,
+  TUTOR = 2,
+  TEACHER = 3,
+  ADMIN = 4,
+}
+
+const isUserRoleAbove = async (uid: string, requestedRole: UserRole) => {
+  const user = await firestore().collection("users").doc(uid).get();
+
+  const role = user.get("role");
+
+  return user.exists && role ? role >= requestedRole : false;
+};
+
 export const createUser = functions.https.onCall(async (data, context) => {
   if (context.app == undefined) {
     throw new functions.https.HttpsError(
@@ -16,6 +31,13 @@ export const createUser = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError(
       "unauthenticated",
+      "User cannot access this information"
+    );
+  }
+
+  if (!isUserRoleAbove(context.auth.uid, UserRole.ADMIN)) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
       "User cannot access this information"
     );
   }
@@ -58,9 +80,16 @@ export const getAllUsers = functions.https.onCall(async (data, context) => {
     );
   }
 
-  if (!context.auth && context.auth!.token.role !== "admin") {
+  if (!context.auth) {
     throw new functions.https.HttpsError(
       "unauthenticated",
+      "User cannot access this information"
+    );
+  }
+
+  if (!isUserRoleAbove(context.auth.uid, UserRole.ADMIN)) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
       "User cannot access this information"
     );
   }
@@ -113,9 +142,16 @@ export const getUsersByRole = functions.https.onCall(async (data, context) => {
     );
   }
 
-  if (!context.auth && context.auth!.token.role !== "admin") {
+  if (!context.auth) {
     throw new functions.https.HttpsError(
       "unauthenticated",
+      "User cannot access this information"
+    );
+  }
+
+  if (!isUserRoleAbove(context.auth.uid, UserRole.ADMIN)) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
       "User cannot access this information"
     );
   }
