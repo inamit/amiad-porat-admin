@@ -6,10 +6,10 @@
     <v-col cols="12">
       <lessons-by-room></lessons-by-room>
     </v-col>
-    <v-col cols="12">
+    <!-- <v-col cols="12">
       <dashboard-datatable />
-    </v-col>
-    <v-col cols="12" md="4">
+    </v-col> -->
+    <!-- <v-col cols="12" md="4">
       <dashboard-congratulation-john />
     </v-col>
     <v-col cols="12" md="8">
@@ -75,7 +75,7 @@
     </v-col>
     <v-col cols="12" md="8">
       <dashboard-card-deposit-and-withdraw />
-    </v-col>
+    </v-col> -->
   </v-row>
 </template>
 
