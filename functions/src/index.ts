@@ -1,9 +1,9 @@
 import * as functions from "firebase-functions";
-import { auth, firestore, initializeApp } from "firebase-admin";
+import * as admin from "firebase-admin";
 import { HttpsError } from "firebase-functions/lib/providers/https";
 import { DocumentSnapshot } from "firebase-functions/v1/firestore";
 
-initializeApp();
+admin.initializeApp();
 
 enum UserRole {
   STUDENT = 1,
@@ -13,7 +13,7 @@ enum UserRole {
 }
 
 const isUserRoleAbove = async (uid: string, requestedRole: UserRole) => {
-  const user = await firestore().collection("users").doc(uid).get();
+  const user = await admin.firestore().collection("users").doc(uid).get();
 
   const role = user.get("role");
 
@@ -43,12 +43,12 @@ export const createUser = functions.https.onCall(async (data, context) => {
   }
 
   try {
-    const { uid } = await auth().createUser({
+    const { uid } = await admin.auth().createUser({
       email: data.email,
       password: data.password,
     });
 
-    await auth().setCustomUserClaims(uid, { role: data.role });
+    await admin.auth().setCustomUserClaims(uid, { role: data.role });
 
     const info = {
       firstName: data.firstName,
@@ -61,7 +61,7 @@ export const createUser = functions.https.onCall(async (data, context) => {
       role: data.role,
     };
 
-    await firestore().collection("users").doc(uid).set(info);
+    await admin.firestore().collection("users").doc(uid).set(info);
   } catch (error) {
     switch (error.code) {
       case "auth/email-already-exists":
@@ -94,11 +94,12 @@ export const getAllUsers = functions.https.onCall(async (data, context) => {
     );
   }
 
-  const { users } = await auth().listUsers();
+  const { users } = await admin.auth().listUsers();
 
   return await Promise.all(
     users.map(async ({ uid, email, metadata, customClaims, phoneNumber }) => {
-      const userInfo: DocumentSnapshot = await firestore()
+      const userInfo: DocumentSnapshot = await admin
+        .firestore()
         .collection("users")
         .doc(uid)
         .get();
@@ -114,10 +115,11 @@ export const getAllUsers = functions.https.onCall(async (data, context) => {
 
       if (response.group) {
         const group = (
-          await firestore().collection("groups").doc(response.group).get()
+          await admin.firestore().collection("groups").doc(response.group).get()
         ).data()!;
 
-        const teacher = await firestore()
+        const teacher = await admin
+          .firestore()
           .collection("users")
           .doc(group?.teacher)
           .get();
@@ -156,7 +158,8 @@ export const getUsersByRole = functions.https.onCall(async (data, context) => {
     );
   }
 
-  const docs = await firestore()
+  const docs = await admin
+    .firestore()
     .collection("users")
     .where("role", "==", data.role)
     .get();
