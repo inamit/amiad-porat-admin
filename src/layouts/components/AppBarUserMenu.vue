@@ -130,7 +130,7 @@
       <v-divider class="my-2" />
 
       <!-- Logout -->
-      <v-list-item link>
+      <v-list-item @click="logout()" link>
         <v-list-item-icon class="me-2">
           <v-icon size="22">
             {{ icons.mdiLogoutVariant }}
@@ -145,6 +145,9 @@
 </template>
 
 <script>
+import router from "@/router";
+import { getAuth } from "@firebase/auth";
+import { query } from "@firebase/firestore";
 import {
   mdiAccountOutline,
   mdiEmailOutline,
@@ -170,6 +173,10 @@ export default class AppBarUserMenu extends Vue {
     mdiHelpCircleOutline,
     mdiLogoutVariant,
   };
+
+  logout() {
+    router.replace({ path: "/login", query: { signOut: "t" } });
+  }
 }
 </script>
 
