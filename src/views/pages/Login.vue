@@ -107,8 +107,9 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 import Swal from "sweetalert2";
-import { use } from "vue/types/umd";
 import router from "@/router";
+import { getUserByID } from "@/DAL/user.dal";
+import UserRole from "@/enums/userRoles";
 
 @Component({ name: "Login" })
 export default class Login extends Vue {
@@ -136,10 +137,18 @@ export default class Login extends Vue {
         this.username,
         this.password
       );
-      console.log(userCredential.user);
 
       if (userCredential.user) {
-        router.push("dashboard");
+        const user = await getUserByID(userCredential.user.uid);
+        if (!user || user.role < UserRole.ADMIN) {
+          auth.signOut();
+          throw {
+            code: AuthErrorCodes.ADMIN_ONLY_OPERATION,
+            message: "אין לך הרשאות לצפות בתוכן זה.",
+          };
+        } else {
+          router.push("dashboard");
+        }
       }
     } catch (error: any) {
       switch (error.code) {
@@ -150,12 +159,11 @@ export default class Login extends Vue {
         case AuthErrorCodes.USER_DELETED:
           this.error = "המייל/סיסמה לא נכונים. נסה שנית";
           break;
-
+        case AuthErrorCodes.ADMIN_ONLY_OPERATION:
         default:
           this.error = error.message;
           break;
       }
-      console.log(error);
     } finally {
       this.loading = false;
     }

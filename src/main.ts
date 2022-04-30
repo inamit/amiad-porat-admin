@@ -6,12 +6,14 @@ import store from "./store";
 import vuetify from "./plugins/vuetify";
 import VueCookies from "vue-cookies";
 import axios from "axios";
-import { initializeApp, getApp } from "firebase/app";
+import { initializeApp } from "firebase/app";
 import {
   setPersistence,
   getAuth,
   browserLocalPersistence,
   connectAuthEmulator,
+  onAuthStateChanged,
+  User,
 } from "firebase/auth";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
@@ -31,6 +33,19 @@ const firebaseConfig = {
   measurementId: process.env.VUE_APP_FIREBASE_MEASUREMENT_ID,
 };
 const app = initializeApp(firebaseConfig);
+
+export const getCurrentUser = (): Promise<User | null> => {
+  return new Promise((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(
+      getAuth(),
+      (user) => {
+        unsubscribe();
+        resolve(user);
+      },
+      reject
+    );
+  });
+};
 
 const appCheck = initializeAppCheck(app, {
   provider: new ReCaptchaV3Provider("6LcwFwMeAAAAABWgShvq1Sps2U8vmVkx39g7wzOa"),

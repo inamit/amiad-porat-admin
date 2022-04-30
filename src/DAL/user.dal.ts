@@ -12,9 +12,8 @@ import {
   WhereFilterOp,
 } from "firebase/firestore";
 
-const firestore = getFirestore();
-
 export const getUserByID = async (id: string): Promise<User | undefined> => {
+  const firestore = getFirestore();
   const userDoc = doc(firestore, "users", id);
   const snapshot = await getDoc(userDoc.withConverter(userConverter));
 
@@ -22,6 +21,7 @@ export const getUserByID = async (id: string): Promise<User | undefined> => {
 };
 
 export const getUsersByMultipleIDs = async (ids: string[]): Promise<User[]> => {
+  const firestore = getFirestore();
   const userQuery = query(
     collection(firestore, "users"),
     where(documentId(), "in", ids)
@@ -45,6 +45,8 @@ export const getUsersWithRoleAndExclude = async (
   role: UserRole,
   userId: string[]
 ) => {
+  const firestore = getFirestore();
+
   const userQuery = query(
     collection(firestore, "users"),
     where("role", "==", role),
@@ -56,6 +58,8 @@ export const getUsersWithRoleAndExclude = async (
 };
 
 const queryRole = async (operator: WhereFilterOp, role: UserRole) => {
+  const firestore = getFirestore();
+
   const userQuery = query(
     collection(firestore, "users"),
     where("role", operator, role)
